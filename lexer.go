@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -118,9 +117,6 @@ func Tokenize(source string) []Token {
 				// check for reserved keyword
 				// a miss will be the types zero value, so ""
 				reserved := keywords[ident]
-				if char == "x" {
-					fmt.Print(reserved)
-				}
 				// TokenType is iota + 1 so TokenType will always be greater than 0
 				if reserved == 0 {
 					tokens = append(tokens, token(Identifier, ident))
