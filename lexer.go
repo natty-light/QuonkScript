@@ -130,6 +130,8 @@ func Tokenize(source string) []Token {
 
 			} else if isSkipable(char) {
 				src = src[1:]
+			} else {
+				panic("Unrecognized character")
 			}
 
 		}
