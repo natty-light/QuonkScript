@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -129,7 +128,6 @@ func Tokenize(source string) []Token {
 			}
 
 		}
-		fmt.Println(tokens)
 	}
 
 	return tokens
