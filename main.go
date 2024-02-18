@@ -1,11 +1,14 @@
 package main
 
-import "fmt"
+import (
+	lexer "QuonkScript/Lexer"
+	"fmt"
+)
 
 func main() {
 	src := "let x = 5;"
 
-	tokens := Tokenize(src)
+	tokens := lexer.Tokenize(src)
 
 	fmt.Println(tokens)
 }

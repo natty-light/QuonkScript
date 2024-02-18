@@ -1,4 +1,4 @@
-package main
+package lexer
 
 import (
 	"fmt"
@@ -19,7 +19,9 @@ const (
 	BinaryOperator
 
 	Let
-	EOL
+
+	EOL // End of Line
+	EOF // End of File
 )
 
 const (
@@ -135,5 +137,5 @@ func Tokenize(source string) []Token {
 			}
 		}
 	}
-	return tokens
+	return append(tokens, token(EOF, "EOF"))
 }
