@@ -133,9 +133,7 @@ func Tokenize(source string) []Token {
 			} else {
 				panic("Unrecognized character")
 			}
-
 		}
 	}
-
 	return tokens
 }
