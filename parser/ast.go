@@ -5,6 +5,7 @@ type NodeType int
 const (
 	ProgramNode NodeType = iota + 1
 	NumericLiteralNode
+	NullLiteralNode
 	IdentifierNode
 	BinaryExprNode
 )
@@ -48,6 +49,11 @@ type (
 		ExprStmt `json:"kind"` // Type should always be NumericLiteralNode
 		Value    float64       `json:"value"`
 	}
+
+	NullLiteral struct {
+		ExprStmt `json:"kind"` // Type should always be NullLiteralNode
+		Value    string        `json:"value"` // value should always be null
+	}
 )
 
 // Implement Node methods
@@ -79,6 +85,9 @@ func (b BinaryExpr) statementNode()  {}
 
 func (n NumericLiteral) expressionNode() {}
 func (n NumericLiteral) statementNode()  {}
+
+func (n NullLiteral) expressionNode() {}
+func (n NullLiteral) statementNode()  {}
 
 type Program struct {
 	Kind NodeType // Type should always be ProgramNode but I don't know how to do that in Go
