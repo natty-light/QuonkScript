@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type Parser struct {
@@ -94,5 +95,11 @@ func PrintAST(prog Program) {
 	if err != nil {
 		return
 	}
-	fmt.Println(string(bytes))
+	str := string(bytes)
+	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
+	str = strings.ReplaceAll(str, "\"Kind\": 2", "NumericLiteral")
+	str = strings.ReplaceAll(str, "\"Kind\": 3", "Identifier")
+	str = strings.ReplaceAll(str, "\"Kind\": 4", "BinaryExpr")
+
+	fmt.Println(str)
 }
