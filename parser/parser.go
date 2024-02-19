@@ -18,12 +18,22 @@ func (P *Parser) at() lexer.Token {
 }
 
 // removes first from tokens array and returns it
-func (P *Parser) next() lexer.Token {
+func (P *Parser) eat() lexer.Token {
 	// Pull out first token
 	prev := P.at()
 	// Remove prev
 	P.tokens = P.tokens[1:]
 
+	return prev
+}
+
+func (P *Parser) eatExpected(expected lexer.TokenType, err string) lexer.Token {
+	prev := P.at()
+	P.tokens = P.tokens[1:]
+
+	if prev.Type != lexer.TokenType(expected) {
+		panic(err)
+	}
 	return prev
 }
 
@@ -73,10 +83,15 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 
 	switch token {
 	case lexer.Identifier:
-		return Ident{Symbol: P.next().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
+		return Ident{Symbol: P.eat().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
 	case lexer.Number:
-		val, _ := strconv.ParseFloat(P.next().Value, 64)
+		val, _ := strconv.ParseFloat(P.eat().Value, 64)
 		return NumericLiteral{Value: val, ExprStmt: ExprStmt{Kind: NumericLiteralNode}}
+	case lexer.OpenParen:
+		P.eat() // eat the opening paren
+		val := P.ParseExpr()
+		P.eatExpected(lexer.CloseParen, "Missing close paren") // eat closing paren
+		return val
 	default:
 		bytes, err := json.Marshal(P.at())
 		if err == nil {
@@ -94,7 +109,7 @@ func (P *Parser) ParseAdditiveExpr() Expr {
 
 	for P.at().Value == "+" || P.at().Value == "-" {
 		// recall that next pops the head off the tokens array of Parser
-		operator := P.next().Value
+		operator := P.eat().Value
 		right := P.ParseMultiplicativeExpr()
 
 		// This bubbles up the expr
@@ -110,7 +125,7 @@ func (P *Parser) ParseMultiplicativeExpr() Expr {
 
 	for P.at().Value == "*" || P.at().Value == "/" || P.at().Value == "%" {
 
-		operator := P.next().Value
+		operator := P.eat().Value
 		right := P.ParsePrimaryExpr()
 
 		// This bubbles up the tree
