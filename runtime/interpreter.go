@@ -4,32 +4,34 @@ import (
 	"QuonkScript/parser"
 )
 
-func Evaluate(astNode parser.Stmt) RuntimeValue {
+func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 	switch astNode.GetKind() {
 	case parser.NumericLiteralNode:
-		return NumberValue{Value: astNode.(parser.NumericLiteral).Value, TypedValue: TypedValue{Type: NumberValueType}}
+		return MakeNumber(astNode.(parser.NumericLiteral).Value)
 	// Return a null by default
 	case parser.NullLiteralNode:
-		return NullValue{Value: "null", TypedValue: TypedValue{Type: NullValueType}}
+		return MakeNull()
 	case parser.BinaryExprNode:
-		// This typecast is save
-		return evalBinaryExpr(astNode.(parser.BinaryExpr))
+		// This typecast is safe
+		return evalBinaryExpr(astNode.(parser.BinaryExpr), scope)
+	case parser.IdentifierNode:
+		return evalIdentifier(astNode.(parser.Ident), scope)
 	case parser.ProgramNode:
-		return evalProgram(astNode.(parser.Program))
+		return evalProgram(astNode.(parser.Program), scope)
 	default:
 		parser.PrintAST(astNode)
 		panic("This NodeType has not been implemented")
 	}
 }
 
-func evalBinaryExpr(expr parser.BinaryExpr) RuntimeValue {
-	leftHandSide := Evaluate(expr.Left)
-	rightHandSide := Evaluate(expr.Right)
+func evalBinaryExpr(expr parser.BinaryExpr, scope *Scope) RuntimeValue {
+	leftHandSide := Evaluate(expr.Left, scope)
+	rightHandSide := Evaluate(expr.Right, scope)
 
 	if leftHandSide.GetType() == NumberValueType && rightHandSide.GetType() == NumberValueType {
 		return evalNumericBinaryExpr(leftHandSide.(NumberValue), rightHandSide.(NumberValue), expr.Operator)
 	} else {
-		return NullValue{TypedValue: TypedValue{Type: NullValueType}, Value: "null"}
+		return NullValue{TypedValue: TypedValue{Type: NullValueType}, Value: nil}
 	}
 }
 
@@ -50,14 +52,19 @@ func evalNumericBinaryExpr(left NumberValue, right NumberValue, operator string)
 		num = float64(int(left.Value) % int(right.Value))
 	}
 
-	return NumberValue{TypedValue: TypedValue{Type: NumberValueType}, Value: num}
+	return MakeNumber(num)
 }
 
-func evalProgram(prog parser.Program) RuntimeValue {
-	var lastEvaluated RuntimeValue = NullValue{TypedValue: TypedValue{Type: NullValueType}, Value: "null"}
+func evalIdentifier(ident parser.Ident, scope *Scope) RuntimeValue {
+	val := scope.LookupVariable(ident.Symbol)
+	return val
+}
+
+func evalProgram(prog parser.Program, scope *Scope) RuntimeValue {
+	var lastEvaluated RuntimeValue = MakeNull()
 
 	for _, stmt := range prog.Body {
-		lastEvaluated = Evaluate(stmt)
+		lastEvaluated = Evaluate(stmt, scope)
 	}
 
 	return lastEvaluated
