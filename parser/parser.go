@@ -64,7 +64,7 @@ func (P *Parser) ParseStatement() Stmt {
 //	UnaryExpr
 //	PrimaryExpr
 func (P *Parser) ParseExpr() Expr {
-	return P.ParseMultiplicativeExpr()
+	return P.ParseAdditiveExpr()
 }
 
 // parse primary expression
@@ -78,6 +78,10 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 		val, _ := strconv.ParseFloat(P.next().Value, 64)
 		return NumericLiteral{Value: val, ExprStmt: ExprStmt{Kind: NumericLiteralNode}}
 	default:
+		bytes, err := json.Marshal(P.at())
+		if err == nil {
+			fmt.Println(string(bytes))
+		}
 		// Do something better than panicking here
 		panic("Unexpeceted token found during parsing")
 	}
