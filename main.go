@@ -1,8 +1,8 @@
 package main
 
 import (
-	"QuonkScript/interpreter"
 	"QuonkScript/parser"
+	"QuonkScript/runtime"
 	"bufio"
 	"fmt"
 	"os"
@@ -30,7 +30,7 @@ func repl() {
 		}
 		prog := p.ProduceAST(input)
 
-		result := interpreter.Evaluate(prog)
+		result := runtime.Evaluate(prog)
 		fmt.Println(result)
 	}
 }

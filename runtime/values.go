@@ -1,4 +1,4 @@
-package interpreter
+package runtime
 
 type ValueType int
 
