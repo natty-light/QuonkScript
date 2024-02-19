@@ -20,7 +20,6 @@ const (
 
 	Let
 
-	EOL // End of Line
 	EOF // End of File
 )
 
@@ -32,7 +31,6 @@ const (
 	divSym     = "/"
 	subSym     = "-"
 	eqSym      = "="
-	semicolon  = ";"
 )
 
 type Token struct {
@@ -93,9 +91,6 @@ func Tokenize(source string) []Token {
 			src = src[1:]
 		case eqSym:
 			tokens = append(tokens, token(Equals, char))
-			src = src[1:]
-		case semicolon:
-			tokens = append(tokens, token(EOL, char))
 			src = src[1:]
 		default:
 			// Handle multichar token

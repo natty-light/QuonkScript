@@ -12,10 +12,12 @@ type Parser struct {
 	tokens []lexer.Token
 }
 
+// returns first token in tokens array
 func (P *Parser) at() lexer.Token {
 	return P.tokens[0]
 }
 
+// removes first from tokens array and returns it
 func (P *Parser) next() lexer.Token {
 	// Pull out first token
 	prev := P.at()
@@ -25,42 +27,47 @@ func (P *Parser) next() lexer.Token {
 	return prev
 }
 
-// Orders of precedence
-
-// AssignmentExpr
-// MemberExpr
-// FunctionCall
-// LogicalExpr
-// ComparisonExpr
-// AdditiveExpr
-// MultiplicativeExpr
-// UnaryExpr
-// PrimaryExpr
-
+// lexes, tokenizes, and produces a Program AST
 func (P *Parser) ProduceAST(src string) Program {
 	// Create token array
 	P.tokens = lexer.Tokenize(src)
 	program := Program{Kind: ProgramNode, Body: make([]Stmt, 0)}
 
 	for P.NotEOF() {
+		// Push expressions onto body
 		program.Body = append(program.Body, P.ParseStatement())
 	}
 
 	return program
 }
 
+// returns whether head of token array is EOF
 func (P *Parser) NotEOF() bool {
 	return P.tokens[0].Type != lexer.EOF
 }
 
+// parses Stmt into Expr
 func (P *Parser) ParseStatement() Stmt {
 	return P.ParseExpr()
 }
 
+// Parse Expr, starts parsing at highest implemented level of following
+// orders of precedence:
+//
+//	AssignmentExpr
+//	MemberExpr
+//	FunctionCall
+//	LogicalExpr
+//	ComparisonExpr
+//	AdditiveExpr
+//	MultiplicativeExpr
+//	UnaryExpr
+//	PrimaryExpr
 func (P *Parser) ParseExpr() Expr {
-	return P.ParseAdditiveExpr()
+	return P.ParseMultiplicativeExpr()
 }
 
+// parse primary expression
 func (P *Parser) ParsePrimaryExpr() Expr {
 	token := P.at().Type
 
@@ -76,15 +83,33 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 	}
 }
 
-// left to right precedence
+// Parses additive expressions with left to right precendence for order of operations.
+// Also kicks off ParseMultiplicativeExpr()
 func (P *Parser) ParseAdditiveExpr() Expr {
-	left := P.ParsePrimaryExpr()
+	left := P.ParseMultiplicativeExpr()
 
 	for P.at().Value == "+" || P.at().Value == "-" {
+		// recall that next pops the head off the tokens array of Parser
+		operator := P.next().Value
+		right := P.ParseMultiplicativeExpr()
+
+		// This bubbles up the expr
+		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
+	}
+	return left
+}
+
+// Parses multiplicative expressions with left to right precendence for order of operations.
+// Also kicks off ParsePrimaryExpr()
+func (P *Parser) ParseMultiplicativeExpr() Expr {
+	left := P.ParsePrimaryExpr()
+
+	for P.at().Value == "*" || P.at().Value == "/" {
+
 		operator := P.next().Value
 		right := P.ParsePrimaryExpr()
 
-		// This bubbles up the expr
+		// This bubbles up the tree
 		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
 	}
 	return left
