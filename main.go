@@ -1,14 +1,34 @@
 package main
 
 import (
-	lexer "QuonkScript/Lexer"
+	parser "QuonkScript/parser"
+	"bufio"
 	"fmt"
+	"os"
 )
 
 func main() {
-	src := "let x = 5;"
+	repl()
+}
 
-	tokens := lexer.Tokenize(src)
+func repl() {
+	p := parser.Parser{}
+	fmt.Println("REPL v0.1")
+	in := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("> ")
+		input, err := in.ReadString('\n')
 
-	fmt.Println(tokens)
+		if err != nil {
+			fmt.Println("Invalid Input")
+			return
+		}
+
+		if input == "exit" {
+			os.Exit(0)
+		}
+
+		prog := p.ProduceAST(input)
+		parser.PrintAST(prog)
+	}
 }
