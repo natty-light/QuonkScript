@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -9,16 +8,16 @@ import (
 type TokenType int
 
 const (
-	Number TokenType = iota + 1
+	Null TokenType = iota + 1
+	Number
 	Identifier
-	Equals
-
-	OpenParen
-	CloseParen
-
-	BinaryOperator
 
 	Let
+
+	Equals
+	OpenParen
+	CloseParen
+	BinaryOperator
 
 	EOF // End of File
 )
@@ -57,7 +56,8 @@ func token(Type TokenType, Value string) Token {
 
 func getKeywordMap() map[string]TokenType {
 	return map[string]TokenType{
-		"let": Let,
+		"let":  Let,
+		"null": Null,
 	}
 }
 
@@ -116,11 +116,9 @@ func Tokenize(source string) []Token {
 				}
 
 				// check for reserved keyword
-				// a miss will be the types zero value, so ""
+				// a miss will be the types zero value, so 0
 				reserved := keywords[ident]
-				if char == "x" {
-					fmt.Print(reserved)
-				}
+
 				// TokenType is iota + 1 so TokenType will always be greater than 0
 				if reserved == 0 {
 					tokens = append(tokens, token(Identifier, ident))

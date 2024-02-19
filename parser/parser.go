@@ -82,16 +82,20 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 	token := P.at().Type
 
 	switch token {
-	case lexer.Identifier:
-		return Ident{Symbol: P.eat().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
+	case lexer.Null:
+		P.eat()
+		return NullLiteral{ExprStmt: ExprStmt{Kind: NullLiteralNode}, Value: "null"}
 	case lexer.Number:
 		val, _ := strconv.ParseFloat(P.eat().Value, 64)
 		return NumericLiteral{Value: val, ExprStmt: ExprStmt{Kind: NumericLiteralNode}}
+	case lexer.Identifier:
+		return Ident{Symbol: P.eat().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
 	case lexer.OpenParen:
 		P.eat() // eat the opening paren
 		val := P.ParseExpr()
 		P.eatExpected(lexer.CloseParen, "Missing close paren") // eat closing paren
 		return val
+
 	default:
 		bytes, err := json.Marshal(P.at())
 		if err == nil {
@@ -142,8 +146,9 @@ func PrintAST(prog Program) {
 	str := string(bytes)
 	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
 	str = strings.ReplaceAll(str, "\"Kind\": 2", "NumericLiteral")
-	str = strings.ReplaceAll(str, "\"Kind\": 3", "Identifier")
-	str = strings.ReplaceAll(str, "\"Kind\": 4", "BinaryExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 3", "Null")
+	str = strings.ReplaceAll(str, "\"Kind\": 4", "Identifier")
+	str = strings.ReplaceAll(str, "\"Kind\": 5", "BinaryExpr")
 
 	fmt.Println(str)
 }
