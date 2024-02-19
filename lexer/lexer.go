@@ -31,6 +31,7 @@ const (
 	divSym     = "/"
 	subSym     = "-"
 	eqSym      = "="
+	modSym     = "%"
 )
 
 type Token struct {
@@ -85,6 +86,8 @@ func Tokenize(source string) []Token {
 		case subSym:
 			fallthrough
 		case divSym:
+			fallthrough
+		case modSym:
 			fallthrough
 		case multSym:
 			tokens = append(tokens, token(BinaryOperator, char))

@@ -104,7 +104,7 @@ func (P *Parser) ParseAdditiveExpr() Expr {
 func (P *Parser) ParseMultiplicativeExpr() Expr {
 	left := P.ParsePrimaryExpr()
 
-	for P.at().Value == "*" || P.at().Value == "/" {
+	for P.at().Value == "*" || P.at().Value == "/" || P.at().Value == "%" {
 
 		operator := P.next().Value
 		right := P.ParsePrimaryExpr()
