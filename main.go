@@ -1,8 +1,8 @@
 package main
 
 import (
-	"QuonkScript/lexer"
-	parser "QuonkScript/parser"
+	"QuonkScript/interpreter"
+	"QuonkScript/parser"
 	"bufio"
 	"fmt"
 	"os"
@@ -28,9 +28,9 @@ func repl() {
 		if input == "exit" {
 			os.Exit(0)
 		}
-		tokens := lexer.Tokenize(input)
-		fmt.Println(tokens)
 		prog := p.ProduceAST(input)
-		parser.PrintAST(prog)
+
+		result := interpreter.Evaluate(prog)
+		fmt.Println(result)
 	}
 }

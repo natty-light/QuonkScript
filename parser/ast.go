@@ -93,3 +93,9 @@ type Program struct {
 	Kind NodeType // Type should always be ProgramNode but I don't know how to do that in Go
 	Body []Stmt
 }
+
+func (p Program) GetKind() NodeType {
+	return p.Kind
+}
+
+func (p Program) statementNode() {}

@@ -138,8 +138,8 @@ func (P *Parser) ParseMultiplicativeExpr() Expr {
 	return left
 }
 
-func PrintAST(prog Program) {
-	bytes, err := json.MarshalIndent(prog, "", "    ")
+func PrintAST(stmt Stmt) {
+	bytes, err := json.MarshalIndent(stmt, "", "    ")
 	if err != nil {
 		return
 	}
