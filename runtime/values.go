@@ -5,6 +5,7 @@ type ValueType int
 const (
 	NullValueType ValueType = iota + 1
 	NumberValueType
+	BooleanValueType
 )
 
 type RuntimeValue interface {
@@ -22,7 +23,7 @@ type NullValue struct {
 }
 
 func (n NullValue) GetType() ValueType {
-	return n.Type
+	return NullValueType
 }
 
 func MakeNull() NullValue {
@@ -36,9 +37,24 @@ type NumberValue struct {
 }
 
 func (n NumberValue) GetType() ValueType {
-	return n.Type
+	return NumberValueType
 }
 
 func MakeNumber(n float64) NumberValue {
 	return NumberValue{TypedValue: TypedValue{Type: NumberValueType}, Value: n}
+}
+
+// Boolean
+
+type BooleanValue struct {
+	TypedValue // Type will be BoolValueType
+	Value      bool
+}
+
+func (b BooleanValue) GetType() ValueType {
+	return BooleanValueType
+}
+
+func MakeBoolean(b bool) BooleanValue {
+	return BooleanValue{TypedValue: TypedValue{Type: BooleanValueType}, Value: b}
 }
