@@ -12,9 +12,11 @@ const (
 	Number
 	Identifier
 
-	Let
+	Mut
+	Const
 
 	Equals
+	Semicolon
 	OpenParen
 	CloseParen
 	BinaryOperator
@@ -31,6 +33,7 @@ const (
 	subSym     = "-"
 	eqSym      = "="
 	modSym     = "%"
+	semi       = ";"
 )
 
 type Token struct {
@@ -56,8 +59,9 @@ func token(Type TokenType, Value string) Token {
 
 func getKeywordMap() map[string]TokenType {
 	return map[string]TokenType{
-		"let":  Let,
-		"null": Null,
+		"mut":   Mut,
+		"const": Const,
+		"null":  Null,
 	}
 }
 
@@ -94,6 +98,9 @@ func Tokenize(source string) []Token {
 			src = src[1:]
 		case eqSym:
 			tokens = append(tokens, token(Equals, char))
+			src = src[1:]
+		case semi:
+			tokens = append(tokens, token(Semicolon, ";"))
 			src = src[1:]
 		default:
 			// Handle multichar token

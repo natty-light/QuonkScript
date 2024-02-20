@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 type Parser struct {
@@ -58,7 +57,14 @@ func (P *Parser) NotEOF() bool {
 
 // parses Stmt into Expr
 func (P *Parser) ParseStatement() Stmt {
-	return P.ParseExpr()
+	switch P.at().Type {
+	case lexer.Mut:
+		fallthrough
+	case lexer.Const:
+		return P.ParseVarDeclaration()
+	default:
+		return P.ParseExpr()
+	}
 }
 
 // Parse Expr, starts parsing at highest implemented level of following
@@ -106,22 +112,6 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 	}
 }
 
-// Parses additive expressions with left to right precendence for order of operations.
-// Also kicks off ParseMultiplicativeExpr()
-func (P *Parser) ParseAdditiveExpr() Expr {
-	left := P.ParseMultiplicativeExpr()
-
-	for P.at().Value == "+" || P.at().Value == "-" {
-		// recall that next pops the head off the tokens array of Parser
-		operator := P.eat().Value
-		right := P.ParseMultiplicativeExpr()
-
-		// This bubbles up the expr
-		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
-	}
-	return left
-}
-
 // Parses multiplicative expressions with left to right precendence for order of operations.
 // Also kicks off ParsePrimaryExpr()
 func (P *Parser) ParseMultiplicativeExpr() Expr {
@@ -138,17 +128,42 @@ func (P *Parser) ParseMultiplicativeExpr() Expr {
 	return left
 }
 
-func PrintAST(stmt Stmt) {
-	bytes, err := json.MarshalIndent(stmt, "", "    ")
-	if err != nil {
-		return
-	}
-	str := string(bytes)
-	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
-	str = strings.ReplaceAll(str, "\"Kind\": 2", "NumericLiteral")
-	str = strings.ReplaceAll(str, "\"Kind\": 3", "Null")
-	str = strings.ReplaceAll(str, "\"Kind\": 4", "Identifier")
-	str = strings.ReplaceAll(str, "\"Kind\": 5", "BinaryExpr")
+// Parses additive expressions with left to right precendence for order of operations.
+// Also kicks off ParseMultiplicativeExpr()
+func (P *Parser) ParseAdditiveExpr() Expr {
+	left := P.ParseMultiplicativeExpr()
 
-	fmt.Println(str)
+	for P.at().Value == "+" || P.at().Value == "-" {
+		// recall that next pops the head off the tokens array of Parser
+		operator := P.eat().Value
+		right := P.ParseMultiplicativeExpr()
+
+		// This bubbles up the expr
+		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
+	}
+	return left
+}
+
+// mut Ident; or (mut | let) Ident = Val
+func (P *Parser) ParseVarDeclaration() Stmt {
+	// eat advances
+	isConstant := P.eat().Type == lexer.Const
+	// eatExpected advances
+	identifier := P.eatExpected(lexer.Identifier, "Expected variable name").Value
+
+	if P.at().Type == lexer.Semicolon {
+		P.eat() // Advance
+		if isConstant {
+			panic("Constant variables must be initialized")
+		}
+		// Mutable variable declaration Node
+		return VarDeclaration{Kind: VarDeclarationNode, Identifier: identifier, Constant: false, Value: nil}
+	}
+
+	P.eatExpected(lexer.Equals, "Expected equals following variable name in declaration")
+	value := P.ParseExpr()
+	// is this pointer fucked?
+	declaration := VarDeclaration{Kind: VarDeclarationNode, Value: &value, Constant: isConstant, Identifier: identifier}
+	P.eatExpected(lexer.Semicolon, "Missing semicolon following variable declaration")
+	return declaration
 }

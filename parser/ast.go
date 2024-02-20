@@ -1,9 +1,19 @@
 package parser
 
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+)
+
 type NodeType int
 
 const (
+	// Statements
 	ProgramNode NodeType = iota + 1
+	VarDeclarationNode
+
+	// Expressions
 	NumericLiteralNode
 	NullLiteralNode
 	IdentifierNode
@@ -54,6 +64,17 @@ type (
 		ExprStmt `json:"kind"` // Type should always be NullLiteralNode
 		Value    string        `json:"value"` // value should always be null
 	}
+	Program struct {
+		Kind NodeType // Type should always be ProgramNode but I don't know how to do that in Go
+		Body []Stmt
+	}
+
+	VarDeclaration struct {
+		Kind       NodeType `json:"kind"` // Type should always be VarDeclarationNode but I don't know how to do that in Go
+		Constant   bool     `json:"constant"`
+		Identifier string   `json:"string"`
+		Value      *Expr    `json:"value"` // Variables can be initialized without values
+	}
 )
 
 // Implement Node methods
@@ -73,7 +94,15 @@ func (n NumericLiteral) GetKind() NodeType {
 	return n.Kind
 }
 
-// Implement expression
+func (p Program) GetKind() NodeType {
+	return p.Kind
+}
+
+func (v VarDeclaration) GetKind() NodeType {
+	return v.Kind
+}
+
+// Implement expression and statements
 func (i Ident) expressionNode() {}
 func (i Ident) statementNode()  {}
 
@@ -89,13 +118,22 @@ func (n NumericLiteral) statementNode()  {}
 func (n NullLiteral) expressionNode() {}
 func (n NullLiteral) statementNode()  {}
 
-type Program struct {
-	Kind NodeType // Type should always be ProgramNode but I don't know how to do that in Go
-	Body []Stmt
-}
-
-func (p Program) GetKind() NodeType {
-	return p.Kind
-}
-
 func (p Program) statementNode() {}
+
+func (v VarDeclaration) statementNode() {}
+
+func PrintAST(stmt Stmt) {
+	bytes, err := json.MarshalIndent(stmt, "", "    ")
+	if err != nil {
+		return
+	}
+	str := string(bytes)
+	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
+	str = strings.ReplaceAll(str, "\"Kind\": 2", "VarDeclaration")
+	str = strings.ReplaceAll(str, "\"Kind\": 3", "NumericLiteral")
+	str = strings.ReplaceAll(str, "\"Kind\": 4", "Null")
+	str = strings.ReplaceAll(str, "\"Kind\": 5", "Identifier")
+	str = strings.ReplaceAll(str, "\"Kind\": 6", "BinaryExpr")
+
+	fmt.Println(str)
+}
