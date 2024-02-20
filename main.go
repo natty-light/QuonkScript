@@ -3,7 +3,6 @@ package main
 import (
 	"QuonkScript/parser"
 	"QuonkScript/runtime"
-	"QuonkScript/set"
 	"bufio"
 	"fmt"
 	"os"
@@ -16,8 +15,7 @@ func main() {
 
 func repl() {
 	p := parser.Parser{}
-	s := set.NewSet()
-	scope := &runtime.Scope{Parent: nil, Variables: make(map[string]runtime.RuntimeValue), Constants: s}
+	scope := &runtime.Scope{Parent: nil, Variables: make(map[string]runtime.Variable)}
 	fmt.Println("REPL v0.1")
 	in := bufio.NewReader(os.Stdin)
 

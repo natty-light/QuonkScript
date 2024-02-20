@@ -58,3 +58,32 @@ func (b BooleanValue) GetType() ValueType {
 func MakeBoolean(b bool) BooleanValue {
 	return BooleanValue{TypedValue: TypedValue{Type: BooleanValueType}, Value: b}
 }
+
+// Variable
+
+type Variable interface {
+	GetName() string
+	GetValue() RuntimeValue
+	IsConstant() bool
+}
+type VariableValue struct {
+	Value    *RuntimeValue
+	Constant bool
+	Name     string
+}
+
+func (v VariableValue) GetName() string {
+	return v.Name
+}
+
+func (v VariableValue) GetValue() RuntimeValue {
+	return *v.Value
+}
+
+func (v VariableValue) IsConstant() bool {
+	return v.Constant
+}
+
+func MakeVariable(varname string, v *RuntimeValue, constant bool) VariableValue {
+	return VariableValue{Value: v, Constant: constant, Name: varname}
+}
