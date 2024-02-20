@@ -1,24 +1,36 @@
 package runtime
 
-import "fmt"
+import (
+	"QuonkScript/set"
+	"fmt"
+)
 
 type Scope struct {
 	Parent    *Scope // pointer to env so it can be null
 	Variables map[string]RuntimeValue
+	Constants *set.Set
 }
 
-func (s *Scope) DeclareVariable(varname string, value RuntimeValue) RuntimeValue {
+func (s *Scope) DeclareVariable(varname string, value RuntimeValue, constant bool) RuntimeValue {
 	if s.Variables[varname] != nil {
 		panic(fmt.Sprintf("Cannot redeclare variable %s", varname))
 	}
 
 	s.Variables[varname] = value
+	if constant {
+		s.Constants.Add(varname)
+	}
 
 	return value
 }
 
 func (e *Scope) AssignVariable(varname string, value RuntimeValue) RuntimeValue {
 	scope := e.Resolve(varname)
+
+	if scope.Constants.Includes(varname) {
+		panic(fmt.Sprintf("Cannot reassign constant variable %s", varname))
+	}
+
 	scope.Variables[varname] = value
 	return value
 }
