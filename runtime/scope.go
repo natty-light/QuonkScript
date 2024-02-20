@@ -5,8 +5,8 @@ import (
 )
 
 type Scope struct {
-	Parent    *Scope // pointer to env so it can be null
-	Variables map[string]Variable
+	Parent    *Scope              // pointer to env so it can be null
+	Variables map[string]Variable // To restore this functionality to what is in the guide, this should be map[string]RuntimeValue
 }
 
 func (s *Scope) DeclareVariable(varname string, value RuntimeValue, constant bool) RuntimeValue {
