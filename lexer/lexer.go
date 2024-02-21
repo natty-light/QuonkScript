@@ -25,8 +25,8 @@ const (
 	OpenParen
 	CloseParen
 	BinaryOperator
-	OpenBracket
-	CloseBracket
+	OpenCurlyBracket
+	CloseCurlyBracket
 	Comma
 	Colon
 
@@ -34,19 +34,20 @@ const (
 )
 
 const (
-	leftParen    = "("
-	rightParen   = ")"
-	addSym       = "+"
-	multSym      = "*"
-	divSym       = "/"
-	subSym       = "-"
-	eqSym        = "="
-	modSym       = "%"
-	semi         = ";"
-	leftBracket  = "{"
-	rightBracket = "}"
-	comma        = ","
-	colon        = ":"
+	leftParen         = "("
+	rightParen        = ")"
+	addSym            = "+"
+	multSym           = "*"
+	divSym            = "/"
+	subSym            = "-"
+	eqSym             = "="
+	modSym            = "%"
+	semi              = ";"
+	leftCurlyBracket  = "{"
+	rightCurlyBracket = "}"
+	comma             = ","
+	colon             = ":"
+	open
 )
 
 type Token struct {
@@ -98,11 +99,11 @@ func Tokenize(source string) []Token {
 		case rightParen:
 			tokens = append(tokens, token(CloseParen, char))
 			src = utils.Pop(src)
-		case leftBracket:
-			tokens = append(tokens, token(OpenBracket, char))
+		case leftCurlyBracket:
+			tokens = append(tokens, token(OpenCurlyBracket, char))
 			src = utils.Pop(src)
-		case rightBracket:
-			tokens = append(tokens, token(CloseBracket, char))
+		case rightCurlyBracket:
+			tokens = append(tokens, token(CloseCurlyBracket, char))
 			src = utils.Pop(src)
 		case addSym:
 			fallthrough

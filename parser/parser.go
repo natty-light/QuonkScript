@@ -182,14 +182,14 @@ func (P *Parser) ParseVarDeclaration() Stmt {
 }
 
 func (P *Parser) ParseObjectExpr() Expr {
-	if P.at().Type != lexer.OpenBracket {
+	if P.at().Type != lexer.OpenCurlyBracket {
 		return P.ParseAdditiveExpr() // If we do not find an open brace, proceed on
 	}
 
 	P.eat() // advance past open brace
 	properties := make([]PropertyLiteral, 0)
 
-	for P.NotEOF() && P.at().Type != lexer.CloseBracket {
+	for P.NotEOF() && P.at().Type != lexer.CloseCurlyBracket {
 		key := P.eatExpected(lexer.Identifier, "Honk! Expected field name following bracket in object literal").Value
 
 		switch P.at().Type {
@@ -199,7 +199,7 @@ func (P *Parser) ParseObjectExpr() Expr {
 			// append property with no value
 			properties = append(properties, PropertyLiteral{Value: nil, Kind: PropertyLiteralNode, Key: key})
 		// Allow shorthand { key }
-		case lexer.CloseBracket:
+		case lexer.CloseCurlyBracket:
 			// append property with no value
 			properties = append(properties, PropertyLiteral{Value: nil, Kind: PropertyLiteralNode, Key: key})
 		// { key: value }
@@ -209,12 +209,12 @@ func (P *Parser) ParseObjectExpr() Expr {
 			// Append property with value
 			properties = append(properties, PropertyLiteral{Value: &val, Kind: PropertyLiteralNode, Key: key})
 
-			if P.at().Type != lexer.CloseBracket {
+			if P.at().Type != lexer.CloseCurlyBracket {
 				P.eatExpected(lexer.Comma, "Honk! Expected comma or closing brace at end of object literal")
 			}
 		}
 
 	}
-	P.eatExpected(lexer.CloseBracket, "Honk! Expected closing bracket for object literal")
+	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected closing bracket for object literal")
 	return ObjectLiteral{Kind: ObjectLiteralNode, Properties: properties}
 }
