@@ -145,7 +145,7 @@ func (P *Parser) ParseAdditiveExpr() Expr {
 }
 
 func (P *Parser) ParseAssignmentExpr() Expr {
-	left := P.ParseAdditiveExpr() // this will be swapped for objects
+	left := P.ParseObjectExpr() // this will be swapped for objects
 
 	if P.at().Type == lexer.Equals {
 		P.eat()                          // advance past equals token
@@ -179,4 +179,42 @@ func (P *Parser) ParseVarDeclaration() Stmt {
 	declaration := VarDeclaration{Kind: VarDeclarationNode, Value: &value, Constant: isConstant, Identifier: identifier}
 	P.eatExpected(lexer.Semicolon, "Missing semicolon following variable declaration")
 	return declaration
+}
+
+func (P *Parser) ParseObjectExpr() Expr {
+	if P.at().Type != lexer.OpenBracket {
+		return P.ParseAdditiveExpr() // If we do not find an open brace, proceed on
+	}
+
+	P.eat() // advance past open brace
+	properties := make([]PropertyLiteral, 0)
+
+	for P.NotEOF() && P.at().Type != lexer.CloseBracket {
+		key := P.eatExpected(lexer.Identifier, "Honk! Expected field name following bracket in object literal").Value
+
+		switch P.at().Type {
+		// Allow shorthand {key, }
+		case lexer.Comma:
+			P.eat() // Advance past comma
+			// append property with no value
+			properties = append(properties, PropertyLiteral{Value: nil, Kind: PropertyLiteralNode, Key: key})
+		// Allow shorthand { key }
+		case lexer.CloseBracket:
+			// append property with no value
+			properties = append(properties, PropertyLiteral{Value: nil, Kind: PropertyLiteralNode, Key: key})
+		// { key: value }
+		default:
+			P.eatExpected(lexer.Colon, "Honk! Expected colon following property name in object literal")
+			val := P.ParseExpr() // Allow any expression
+			// Append property with value
+			properties = append(properties, PropertyLiteral{Value: &val, Kind: PropertyLiteralNode, Key: key})
+
+			if P.at().Type != lexer.CloseBracket {
+				P.eatExpected(lexer.Comma, "Honk! Expected comma or closing brace at end of object literal")
+			}
+		}
+
+	}
+	P.eatExpected(lexer.CloseBracket, "Honk! Expected closing bracket for object literal")
+	return ObjectLiteral{Kind: ObjectLiteralNode, Properties: properties}
 }
