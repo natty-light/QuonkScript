@@ -29,25 +29,30 @@ const (
 	CloseCurlyBracket
 	Comma
 	Colon
+	OpenSquareBracket
+	CloseSquareBracket
+	Dot
 
 	EOF // End of File
 )
 
 const (
-	leftParen         = "("
-	rightParen        = ")"
-	addSym            = "+"
-	multSym           = "*"
-	divSym            = "/"
-	subSym            = "-"
-	eqSym             = "="
-	modSym            = "%"
-	semi              = ";"
-	leftCurlyBracket  = "{"
-	rightCurlyBracket = "}"
-	comma             = ","
-	colon             = ":"
-	open
+	leftParen          = "("
+	rightParen         = ")"
+	addSym             = "+"
+	multSym            = "*"
+	divSym             = "/"
+	subSym             = "-"
+	eqSym              = "="
+	modSym             = "%"
+	semi               = ";"
+	leftCurlyBracket   = "{"
+	rightCurlyBracket  = "}"
+	comma              = ","
+	colon              = ":"
+	leftSquareBracket  = "["
+	rightSquareBracket = "]"
+	dot                = "."
 )
 
 type Token struct {
@@ -105,6 +110,12 @@ func Tokenize(source string) []Token {
 		case rightCurlyBracket:
 			tokens = append(tokens, token(CloseCurlyBracket, char))
 			src = utils.Pop(src)
+		case leftSquareBracket:
+			tokens = append(tokens, token(OpenSquareBracket, char))
+			src = utils.Pop(src)
+		case rightSquareBracket:
+			tokens = append(tokens, token(CloseSquareBracket, char))
+			src = utils.Pop(src)
 		case addSym:
 			fallthrough
 		case subSym:
@@ -127,6 +138,9 @@ func Tokenize(source string) []Token {
 			src = utils.Pop(src)
 		case comma:
 			tokens = append(tokens, token(Comma, char))
+			src = utils.Pop(src)
+		case dot:
+			tokens = append(tokens, token(Dot, char))
 			src = utils.Pop(src)
 		default:
 			// Handle multichar token
