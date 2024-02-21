@@ -23,6 +23,8 @@ const (
 	// Expressions
 	BinaryExprNode
 	AssignmentNode
+	MemberExprNode
+	FunctionCallExprNode
 )
 
 // Node Interfaces
@@ -97,6 +99,19 @@ type (
 		Key   string   `json:"key"`
 		Value *Expr    `json:"value"` // Pointer so it can be nil
 	}
+
+	MemberExpr struct {
+		Kind     NodeType `json:"kind"` // Type should always be MemberExprNode
+		Object   Expr     `json:"object"`
+		Field    Expr     `json:"property"`
+		Computed bool     `json:"computed"`
+	}
+
+	FunctionCallExpr struct {
+		Kind   NodeType `json:"kind"` // Type should always be FunctionCallExprNode
+		Args   []Expr   `json:"args"`
+		Caller Expr     `json:"caller"`
+	}
 )
 
 // Implement Node methods
@@ -136,6 +151,14 @@ func (p PropertyLiteral) GetKind() NodeType {
 	return PropertyLiteralNode
 }
 
+func (m MemberExpr) GetKind() NodeType {
+	return MemberExprNode
+}
+
+func (f FunctionCallExpr) GetKind() NodeType {
+	return FunctionCallExprNode
+}
+
 // Implement expression and statements
 func (i Ident) expressionNode() {}
 func (i Ident) statementNode()  {}
@@ -165,12 +188,22 @@ func (o ObjectLiteral) statementNode()  {}
 func (p PropertyLiteral) expressionNode() {}
 func (p PropertyLiteral) statementNode()  {}
 
+func (m MemberExpr) expressionNode() {}
+func (m MemberExpr) statementNode()  {}
+
+func (f FunctionCallExpr) expressionNode() {}
+func (f FunctionCallExpr) statementNode()  {}
+
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")
 	if err != nil {
 		return
 	}
 	str := string(bytes)
+	str = strings.ReplaceAll(str, "\"Kind\": 10", "MemberExpr")
+	str = strings.ReplaceAll(str, "\"kind\": 10", "Kind: MemberExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 11", "FunctionCallExpr")
+	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: FunctionCallExpr")
 	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
 	str = strings.ReplaceAll(str, "\"kind\": 1", "Kind: Program")
 	str = strings.ReplaceAll(str, "\"Kind\": 2", "VarDeclaration")

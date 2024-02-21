@@ -70,15 +70,13 @@ func (P *Parser) ParseStatement() Stmt {
 // Parse Expr, starts parsing at highest implemented level of following
 // orders of precedence:
 //
-//	AssignmentExpr
-//	MemberExpr
-//	FunctionCallExpr
-//	LogicalExpr
-//	ComparisonExpr
-//	AdditiveExpr
-//	MultiplicativeExpr
-//	UnaryExpr
-//	PrimaryExpr
+//		AssignmentExpr
+//		ObjectExpr
+//		AdditiveExpr
+//		MultiplicativeExpr
+//	 	FunctionCallExpr
+//		MemberExpr
+//		PrimaryExpr
 //
 // Kicks off ParseAssignmentExpr()
 func (P *Parser) ParseExpr() Expr {
@@ -159,12 +157,12 @@ func (P *Parser) ParseAdditiveExpr() Expr {
 // Parses multiplicative expressions with left to right precendence for order of operations.
 // Also kicks off ParsePrimaryExpr()
 func (P *Parser) ParseMultiplicativeExpr() Expr {
-	left := P.ParsePrimaryExpr()
+	left := P.ParseCallMemberExpr()
 
 	for P.at().Value == "*" || P.at().Value == "/" || P.at().Value == "%" {
 
 		operator := P.eat().Value
-		right := P.ParsePrimaryExpr()
+		right := P.ParseCallMemberExpr()
 
 		// This bubbles up the tree
 		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
@@ -172,7 +170,53 @@ func (P *Parser) ParseMultiplicativeExpr() Expr {
 	return left
 }
 
-// parse primary expression
+// This function is different as it takes in an Expr argument
+func (P *Parser) ParseFunctionCallExpr(caller Expr) Expr {
+	args := P.ParseArguments()
+	var callExpr Expr = FunctionCallExpr{Kind: FunctionCallExprNode, Caller: caller, Args: args} // no walrus here since we need callExpr to just be an Expr
+
+	// This allows us to recursively chain function calls
+	if P.at().Type == lexer.OpenParen {
+		callExpr = P.ParseFunctionCallExpr(callExpr)
+	}
+
+	return callExpr
+}
+
+// This function parses object member expressions
+// Also, it kicks of ParsePrimaryExpr
+func (P *Parser) ParseMemberExpr() Expr {
+	obj := P.ParsePrimaryExpr()
+
+	for P.at().Type == lexer.Dot || P.at().Type == lexer.OpenSquareBracket {
+		// Get . or [
+		operator := P.eat()
+		var field Expr
+		var computed bool
+
+		if operator.Type == lexer.Dot {
+			// non computed branch obj.field
+			computed = false
+			// We expect P.at() to be an Identifier
+			field = P.ParsePrimaryExpr()
+
+			if field.GetKind() != IdentifierNode {
+				panic("Honk! Attempt to reference object field with something other than an identifier")
+			}
+
+		} else {
+			// Computed branch
+			computed = true
+			// this allows obj[computed]
+			field = P.ParseExpr()
+			P.eatExpected(lexer.CloseSquareBracket, "Honk! Expected closing bracket for object field access")
+		}
+		obj = MemberExpr{Kind: MemberExprNode, Field: field, Computed: computed, Object: obj}
+	}
+	return obj
+}
+
+// parse primary expression, bottom of call stack
 func (P *Parser) ParsePrimaryExpr() Expr {
 	token := P.at().Type
 
@@ -199,6 +243,44 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 		// Do something better than panicking here
 		panic("Unexpeceted token found during parsing")
 	}
+}
+
+// Parses Object Member expressions with left to right precedence, can parse members recursively
+func (P *Parser) ParseCallMemberExpr() Expr {
+	member := P.ParseMemberExpr() // Will fall through to parse primary
+
+	if P.at().Type == lexer.OpenParen {
+		return P.ParseFunctionCallExpr(member)
+	}
+	return member
+}
+
+// This function parses arguments for a function call
+// arguments are not parameters, args are just expressions
+func (P *Parser) ParseArguments() []Expr {
+	// To get here, P.at() is an open paren but this doesn't hurt
+	P.eatExpected(lexer.OpenParen, "Honk! Expected parenthesis after function call")
+	args := make([]Expr, 0)
+	// if the next token is anything other than
+	if P.at().Type != lexer.CloseParen {
+		args = P.ParseArgumentList()
+	}
+	P.eatExpected(lexer.CloseParen, "Honk! Expected closing parenthesis for function call")
+	return args
+}
+
+func (P *Parser) ParseArgumentList() []Expr {
+	// Parse first arg
+	args := []Expr{P.ParseAssignmentExpr()}
+
+	// In JS impl, this line is while P.at().Type == TokenType.Comma && P.eat(), but I don't know what the equivalent is in Go so lets try this
+	for P.at().Type != lexer.EOF && P.at().Type == lexer.Comma {
+		P.eat()
+		args = append(args, P.ParseAssignmentExpr())
+	}
+
+	return args
+	// No need to eatExpected() here as we do that in the calling function
 }
 
 // Parses variable declaration expr stmt
