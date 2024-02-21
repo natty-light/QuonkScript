@@ -13,10 +13,14 @@ const (
 	ProgramNode NodeType = iota + 1
 	VarDeclarationNode
 
-	// Expressions
+	// Literals
 	NumericLiteralNode
 	NullLiteralNode
 	IdentifierNode
+	PropertyLiteralNode
+	ObjectLiteralNode
+
+	// Expressions
 	BinaryExprNode
 	AssignmentNode
 )
@@ -82,6 +86,17 @@ type (
 		Assignee Expr     // This is important for the implementation of objects in supporting complex expressions
 		Value    Expr
 	}
+
+	ObjectLiteral struct {
+		Kind       NodeType          `json:"kind"` // Type should always be ObjectLiteralNode
+		Properties []PropertyLiteral `json:"properties"`
+	}
+
+	PropertyLiteral struct {
+		Kind  NodeType `json:"kind"` // Type should always be PropertyLiteralNode
+		Key   string   `json:"key"`
+		Value *Expr    `json:"value"` // Pointer so it can be nil
+	}
 )
 
 // Implement Node methods
@@ -90,27 +105,35 @@ func (e ExprStmt) GetKind() NodeType {
 }
 
 func (b BinaryExpr) GetKind() NodeType {
-	return b.Kind
+	return BinaryExprNode
 }
 
 func (i Ident) GetKind() NodeType {
-	return i.Kind
+	return IdentifierNode
 }
 
 func (n NumericLiteral) GetKind() NodeType {
-	return n.Kind
+	return NumericLiteralNode
 }
 
 func (p Program) GetKind() NodeType {
-	return p.Kind
+	return ProgramNode
 }
 
 func (v VarDeclaration) GetKind() NodeType {
-	return v.Kind
+	return VarDeclarationNode
 }
 
 func (v VarAssignemntExpr) GetKind() NodeType {
-	return v.Kind
+	return AssignmentNode
+}
+
+func (o ObjectLiteral) GetKind() NodeType {
+	return ObjectLiteralNode
+}
+
+func (p PropertyLiteral) GetKind() NodeType {
+	return PropertyLiteralNode
 }
 
 // Implement expression and statements
@@ -136,6 +159,12 @@ func (v VarDeclaration) statementNode() {}
 func (v VarAssignemntExpr) statementNode()  {}
 func (v VarAssignemntExpr) expressionNode() {}
 
+func (o ObjectLiteral) expressionNode() {}
+func (o ObjectLiteral) statementNode()  {}
+
+func (p PropertyLiteral) expressionNode() {}
+func (p PropertyLiteral) statementNode()  {}
+
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")
 	if err != nil {
@@ -147,8 +176,10 @@ func PrintAST(stmt Stmt) {
 	str = strings.ReplaceAll(str, "\"Kind\": 3", "NumericLiteral")
 	str = strings.ReplaceAll(str, "\"Kind\": 4", "Null")
 	str = strings.ReplaceAll(str, "\"Kind\": 5", "Identifier")
-	str = strings.ReplaceAll(str, "\"Kind\": 6", "BinaryExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 7", "AssignmentExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 6", "PropertyLiteral")
+	str = strings.ReplaceAll(str, "\"Kind\": 7", "ObjectLiteral")
+	str = strings.ReplaceAll(str, "\"Kind\": 8", "BinaryExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 9", "AssignmentExpr")
 
 	fmt.Println(str)
 }
