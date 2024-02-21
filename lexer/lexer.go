@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"QuonkScript/utils"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -100,6 +101,9 @@ func Tokenize(source string) []Token {
 		case leftBracket:
 			tokens = append(tokens, token(OpenBracket, char))
 			src = utils.Pop(src)
+		case rightBracket:
+			tokens = append(tokens, token(CloseBracket, char))
+			src = utils.Pop(src)
 		case addSym:
 			fallthrough
 		case subSym:
@@ -116,6 +120,9 @@ func Tokenize(source string) []Token {
 			src = utils.Pop(src)
 		case semi:
 			tokens = append(tokens, token(Semicolon, char))
+			src = utils.Pop(src)
+		case colon:
+			tokens = append(tokens, token(Colon, char))
 			src = utils.Pop(src)
 		case comma:
 			tokens = append(tokens, token(Comma, char))
@@ -154,7 +161,7 @@ func Tokenize(source string) []Token {
 			} else if isSkipable(char) {
 				src = utils.Pop(src)
 			} else {
-				panic("Unrecognized character")
+				panic(fmt.Sprintf("Unrecognized character %s", char))
 			}
 		}
 	}
