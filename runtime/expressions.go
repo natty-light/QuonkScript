@@ -48,3 +48,21 @@ func evalAssignmentExpr(expr parser.VarAssignemntExpr, scope *Scope) RuntimeValu
 	// This cast is safe as we are not implementing objects yet
 	return scope.AssignVariable(varname, Evaluate(expr.Value, scope))
 }
+
+func evalObjectExpr(object parser.ObjectLiteral, scope *Scope) RuntimeValue {
+	obj := ObjectValue{TypedValue: TypedValue{Type: ObjectValueType}, Properties: make(map[string]RuntimeValue)}
+	var val RuntimeValue
+	for _, propertyLiteral := range object.Properties {
+		key := propertyLiteral.Key
+		value := propertyLiteral.Value
+		// { key }
+		if value == nil {
+			val = scope.LookupVariable(key)
+		} else {
+			// Dereference pointer
+			val = Evaluate(*value, scope)
+		}
+		obj.Set(key, val)
+	}
+	return obj
+}

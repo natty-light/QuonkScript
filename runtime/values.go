@@ -6,6 +6,7 @@ const (
 	NullValueType ValueType = iota + 1
 	NumberValueType
 	BooleanValueType
+	ObjectValueType
 )
 
 type RuntimeValue interface {
@@ -86,4 +87,41 @@ func (v VariableValue) IsConstant() bool {
 
 func MakeVariable(varname string, v *RuntimeValue, constant bool) VariableValue {
 	return VariableValue{Value: v, Constant: constant, Name: varname}
+}
+
+// Object
+
+type Object interface {
+	GetType()
+	Keys() []string
+	Get(name string) RuntimeValue
+	Set(name string, value RuntimeValue) RuntimeValue
+}
+
+type ObjectValue struct {
+	TypedValue
+	Properties map[string]RuntimeValue
+}
+
+func (o ObjectValue) GetType() ValueType {
+	return o.Type
+}
+
+func (o ObjectValue) Keys() []string {
+	keys := make([]string, 0)
+
+	for k := range o.Properties {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func (o ObjectValue) Get(name string) RuntimeValue {
+	return o.Properties[name]
+}
+
+func (o ObjectValue) Set(name string, value RuntimeValue) RuntimeValue {
+	o.Properties[name] = value
+
+	return value
 }
