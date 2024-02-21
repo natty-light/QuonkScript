@@ -5,3 +5,4 @@ This project is a study in building an interpreted language, following the [vide
 ## Todo:
 
     Pos, End fields for position in src for sake of error messages
+    Move error messages to consts in file

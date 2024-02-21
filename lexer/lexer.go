@@ -62,7 +62,7 @@ func isNumeric(s string) bool {
 }
 
 func isSkipable(s string) bool {
-	return s == " " || s == "\n" || s == "\t"
+	return s == " " || s == "\n" || s == "\t" || s == "\r"
 }
 
 func token(Type TokenType, Value string) Token {
