@@ -50,3 +50,9 @@ func (s *Scope) Resolve(varname string) *Scope {
 	// since Parent is a pointer to allow for nil, Scope will always be a pointer
 	return s.Parent.Resolve(varname)
 }
+
+// Takes in pointer to scope and mutates it to hold global variables
+func SetupScope(scope *Scope) {
+	scope.DeclareVariable("true", MakeBoolean(true), true)
+	scope.DeclareVariable("false", MakeBoolean(false), true)
+}
