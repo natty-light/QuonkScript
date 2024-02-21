@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"QuonkScript/utils"
 	"regexp"
 	"strings"
 )
@@ -8,32 +9,43 @@ import (
 type TokenType int
 
 const (
+	// Literals
 	Null TokenType = iota + 1
 	Number
 	Identifier
 
+	// Variables
 	Mut
 	Const
 
+	// Grouping and operations
 	Equals
 	Semicolon
 	OpenParen
 	CloseParen
 	BinaryOperator
+	OpenBracket
+	CloseBracket
+	Comma
+	Colon
 
 	EOF // End of File
 )
 
 const (
-	leftParen  = "("
-	rightParen = ")"
-	addSym     = "+"
-	multSym    = "*"
-	divSym     = "/"
-	subSym     = "-"
-	eqSym      = "="
-	modSym     = "%"
-	semi       = ";"
+	leftParen    = "("
+	rightParen   = ")"
+	addSym       = "+"
+	multSym      = "*"
+	divSym       = "/"
+	subSym       = "-"
+	eqSym        = "="
+	modSym       = "%"
+	semi         = ";"
+	leftBracket  = "{"
+	rightBracket = "}"
+	comma        = ","
+	colon        = ":"
 )
 
 type Token struct {
@@ -81,10 +93,13 @@ func Tokenize(source string) []Token {
 		case leftParen:
 			tokens = append(tokens, token(OpenParen, char))
 			// Pop first char
-			src = src[1:]
+			src = utils.Pop(src)
 		case rightParen:
 			tokens = append(tokens, token(CloseParen, char))
-			src = src[1:]
+			src = utils.Pop(src)
+		case leftBracket:
+			tokens = append(tokens, token(OpenBracket, char))
+			src = utils.Pop(src)
 		case addSym:
 			fallthrough
 		case subSym:
@@ -95,13 +110,16 @@ func Tokenize(source string) []Token {
 			fallthrough
 		case multSym:
 			tokens = append(tokens, token(BinaryOperator, char))
-			src = src[1:]
+			src = utils.Pop(src)
 		case eqSym:
 			tokens = append(tokens, token(Equals, char))
-			src = src[1:]
+			src = utils.Pop(src)
 		case semi:
-			tokens = append(tokens, token(Semicolon, ";"))
-			src = src[1:]
+			tokens = append(tokens, token(Semicolon, char))
+			src = utils.Pop(src)
+		case comma:
+			tokens = append(tokens, token(Comma, char))
+			src = utils.Pop(src)
 		default:
 			// Handle multichar token
 			if isNumeric(char) {
@@ -110,7 +128,7 @@ func Tokenize(source string) []Token {
 				// We don't use char here because we want to process entire multichar number within this switch case
 				for len(src) > 0 && isNumeric(src[0]) {
 					num += src[0]
-					src = src[1:]
+					src = utils.Pop(src)
 				}
 
 				tokens = append(tokens, token(Number, num))
@@ -119,7 +137,7 @@ func Tokenize(source string) []Token {
 				ident := "" // ident could be a variable name, or it could be a keyword
 				for len(src) > 0 && isAlpha(src[0]) {
 					ident += src[0]
-					src = src[1:]
+					src = utils.Pop(src)
 				}
 
 				// check for reserved keyword
@@ -134,7 +152,7 @@ func Tokenize(source string) []Token {
 				}
 
 			} else if isSkipable(char) {
-				src = src[1:]
+				src = utils.Pop(src)
 			} else {
 				panic("Unrecognized character")
 			}
