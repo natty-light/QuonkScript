@@ -18,6 +18,7 @@ const (
 	NullLiteralNode
 	IdentifierNode
 	BinaryExprNode
+	AssignmentNode
 )
 
 // Node Interfaces
@@ -75,6 +76,12 @@ type (
 		Identifier string   `json:"string"`
 		Value      *Expr    `json:"value"` // Variables can be initialized without values
 	}
+
+	VarAssignemntExpr struct {
+		Kind     NodeType // Type should always be AssignmentNode but I don't know how to do that in Go
+		Assignee Expr     // This is important for the implementation of objects in supporting complex expressions
+		Value    Expr
+	}
 )
 
 // Implement Node methods
@@ -102,6 +109,10 @@ func (v VarDeclaration) GetKind() NodeType {
 	return v.Kind
 }
 
+func (v VarAssignemntExpr) GetKind() NodeType {
+	return v.Kind
+}
+
 // Implement expression and statements
 func (i Ident) expressionNode() {}
 func (i Ident) statementNode()  {}
@@ -122,6 +133,9 @@ func (p Program) statementNode() {}
 
 func (v VarDeclaration) statementNode() {}
 
+func (v VarAssignemntExpr) statementNode()  {}
+func (v VarAssignemntExpr) expressionNode() {}
+
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")
 	if err != nil {
@@ -134,6 +148,7 @@ func PrintAST(stmt Stmt) {
 	str = strings.ReplaceAll(str, "\"Kind\": 4", "Null")
 	str = strings.ReplaceAll(str, "\"Kind\": 5", "Identifier")
 	str = strings.ReplaceAll(str, "\"Kind\": 6", "BinaryExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 7", "AssignmentExpr")
 
 	fmt.Println(str)
 }

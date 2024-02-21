@@ -80,7 +80,7 @@ func (P *Parser) ParseStatement() Stmt {
 //	UnaryExpr
 //	PrimaryExpr
 func (P *Parser) ParseExpr() Expr {
-	return P.ParseAdditiveExpr()
+	return P.ParseAssignmentExpr()
 }
 
 // parse primary expression
@@ -141,6 +141,19 @@ func (P *Parser) ParseAdditiveExpr() Expr {
 		// This bubbles up the expr
 		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
 	}
+	return left
+}
+
+func (P *Parser) ParseAssignmentExpr() Expr {
+	left := P.ParseAdditiveExpr() // this will be swapped for objects
+
+	if P.at().Type == lexer.Equals {
+		P.eat()                          // advance past equals token
+		value := P.ParseAssignmentExpr() // we want to allow chaining so we must call recursively
+
+		return VarAssignemntExpr{Value: value, Assignee: left, Kind: AssignmentNode}
+	}
+
 	return left
 }
 
