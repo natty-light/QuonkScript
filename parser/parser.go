@@ -72,78 +72,21 @@ func (P *Parser) ParseStatement() Stmt {
 //
 //	AssignmentExpr
 //	MemberExpr
-//	FunctionCall
+//	FunctionCallExpr
 //	LogicalExpr
 //	ComparisonExpr
 //	AdditiveExpr
 //	MultiplicativeExpr
 //	UnaryExpr
 //	PrimaryExpr
+//
+// Kicks off ParseAssignmentExpr()
 func (P *Parser) ParseExpr() Expr {
 	return P.ParseAssignmentExpr()
 }
 
-// parse primary expression
-func (P *Parser) ParsePrimaryExpr() Expr {
-	token := P.at().Type
-
-	switch token {
-	case lexer.Null:
-		P.eat()
-		return NullLiteral{ExprStmt: ExprStmt{Kind: NullLiteralNode}, Value: "null"}
-	case lexer.Number:
-		val, _ := strconv.ParseFloat(P.eat().Value, 64)
-		return NumericLiteral{Value: val, ExprStmt: ExprStmt{Kind: NumericLiteralNode}}
-	case lexer.Identifier:
-		return Ident{Symbol: P.eat().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
-	case lexer.OpenParen:
-		P.eat() // eat the opening paren
-		val := P.ParseExpr()
-		P.eatExpected(lexer.CloseParen, "Missing close paren") // eat closing paren
-		return val
-
-	default:
-		bytes, err := json.Marshal(P.at())
-		if err == nil {
-			fmt.Println(string(bytes))
-		}
-		// Do something better than panicking here
-		panic("Unexpeceted token found during parsing")
-	}
-}
-
-// Parses multiplicative expressions with left to right precendence for order of operations.
-// Also kicks off ParsePrimaryExpr()
-func (P *Parser) ParseMultiplicativeExpr() Expr {
-	left := P.ParsePrimaryExpr()
-
-	for P.at().Value == "*" || P.at().Value == "/" || P.at().Value == "%" {
-
-		operator := P.eat().Value
-		right := P.ParsePrimaryExpr()
-
-		// This bubbles up the tree
-		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
-	}
-	return left
-}
-
-// Parses additive expressions with left to right precendence for order of operations.
-// Also kicks off ParseMultiplicativeExpr()
-func (P *Parser) ParseAdditiveExpr() Expr {
-	left := P.ParseMultiplicativeExpr()
-
-	for P.at().Value == "+" || P.at().Value == "-" {
-		// recall that next pops the head off the tokens array of Parser
-		operator := P.eat().Value
-		right := P.ParseMultiplicativeExpr()
-
-		// This bubbles up the expr
-		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
-	}
-	return left
-}
-
+// Parses Assignment expressions with left to right precedence
+// Also kicks off ParseObjectExpr()
 func (P *Parser) ParseAssignmentExpr() Expr {
 	left := P.ParseObjectExpr() // this will be swapped for objects
 
@@ -157,30 +100,8 @@ func (P *Parser) ParseAssignmentExpr() Expr {
 	return left
 }
 
-// mut Ident; or (mut | let) Ident = Val
-func (P *Parser) ParseVarDeclaration() Stmt {
-	// eat advances
-	isConstant := P.eat().Type == lexer.Const
-	// eatExpected advances
-	identifier := P.eatExpected(lexer.Identifier, "Expected variable name").Value
-
-	if P.at().Type == lexer.Semicolon {
-		P.eat() // Advance
-		if isConstant {
-			panic("Constant variables must be initialized")
-		}
-		// Mutable variable declaration Node
-		return VarDeclaration{Kind: VarDeclarationNode, Identifier: identifier, Constant: false, Value: nil}
-	}
-
-	P.eatExpected(lexer.Equals, "Expected equals following variable name in declaration")
-	value := P.ParseExpr()
-	// is this pointer fucked?
-	declaration := VarDeclaration{Kind: VarDeclarationNode, Value: &value, Constant: isConstant, Identifier: identifier}
-	P.eatExpected(lexer.Semicolon, "Missing semicolon following variable declaration")
-	return declaration
-}
-
+// Parses object expressions with left to right precedence
+// Also kicks off ParseAdditiveExpr()
 func (P *Parser) ParseObjectExpr() Expr {
 	if P.at().Type != lexer.OpenCurlyBracket {
 		return P.ParseAdditiveExpr() // If we do not find an open brace, proceed on
@@ -217,4 +138,89 @@ func (P *Parser) ParseObjectExpr() Expr {
 	}
 	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected closing bracket for object literal")
 	return ObjectLiteral{Kind: ObjectLiteralNode, Properties: properties}
+}
+
+// Parses additive expressions with left to right precendence for order of operations.
+// Also kicks off ParseMultiplicativeExpr()
+func (P *Parser) ParseAdditiveExpr() Expr {
+	left := P.ParseMultiplicativeExpr()
+
+	for P.at().Value == "+" || P.at().Value == "-" {
+		// recall that next pops the head off the tokens array of Parser
+		operator := P.eat().Value
+		right := P.ParseMultiplicativeExpr()
+
+		// This bubbles up the expr
+		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
+	}
+	return left
+}
+
+// Parses multiplicative expressions with left to right precendence for order of operations.
+// Also kicks off ParsePrimaryExpr()
+func (P *Parser) ParseMultiplicativeExpr() Expr {
+	left := P.ParsePrimaryExpr()
+
+	for P.at().Value == "*" || P.at().Value == "/" || P.at().Value == "%" {
+
+		operator := P.eat().Value
+		right := P.ParsePrimaryExpr()
+
+		// This bubbles up the tree
+		left = BinaryExpr{ExprStmt: ExprStmt{Kind: BinaryExprNode}, Left: left, Right: right, Operator: operator}
+	}
+	return left
+}
+
+// parse primary expression
+func (P *Parser) ParsePrimaryExpr() Expr {
+	token := P.at().Type
+
+	switch token {
+	case lexer.Null:
+		P.eat()
+		return NullLiteral{ExprStmt: ExprStmt{Kind: NullLiteralNode}, Value: "null"}
+	case lexer.Number:
+		val, _ := strconv.ParseFloat(P.eat().Value, 64)
+		return NumericLiteral{Value: val, ExprStmt: ExprStmt{Kind: NumericLiteralNode}}
+	case lexer.Identifier:
+		return Ident{Symbol: P.eat().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
+	case lexer.OpenParen:
+		P.eat() // eat the opening paren
+		val := P.ParseExpr()
+		P.eatExpected(lexer.CloseParen, "Missing close paren") // eat closing paren
+		return val
+
+	default:
+		bytes, err := json.Marshal(P.at())
+		if err == nil {
+			fmt.Println(string(bytes))
+		}
+		// Do something better than panicking here
+		panic("Unexpeceted token found during parsing")
+	}
+}
+
+// Parses variable declaration expr stmt
+func (P *Parser) ParseVarDeclaration() Stmt {
+	// eat advances
+	isConstant := P.eat().Type == lexer.Const
+	// eatExpected advances
+	identifier := P.eatExpected(lexer.Identifier, "Expected variable name").Value
+
+	if P.at().Type == lexer.Semicolon {
+		P.eat() // Advance
+		if isConstant {
+			panic("Constant variables must be initialized")
+		}
+		// Mutable variable declaration Node
+		return VarDeclaration{Kind: VarDeclarationNode, Identifier: identifier, Constant: false, Value: nil}
+	}
+
+	P.eatExpected(lexer.Equals, "Expected equals following variable name in declaration")
+	value := P.ParseExpr()
+	// is this pointer fucked?
+	declaration := VarDeclaration{Kind: VarDeclarationNode, Value: &value, Constant: isConstant, Identifier: identifier}
+	P.eatExpected(lexer.Semicolon, "Missing semicolon following variable declaration")
+	return declaration
 }
