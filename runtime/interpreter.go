@@ -21,6 +21,8 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 		return evalProgram(astNode.(parser.Program), scope)
 	case parser.VarDeclarationNode:
 		return evalVarDeclaration(astNode.(parser.VarDeclaration), scope)
+	case parser.AssignmentNode:
+		return evalAssignmentExpr(astNode.(parser.VarAssignemntExpr), scope)
 	default:
 		parser.PrintAST(astNode)
 		panic("This NodeType has not been implemented")

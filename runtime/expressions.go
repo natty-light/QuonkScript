@@ -1,6 +1,8 @@
 package runtime
 
-import "QuonkScript/parser"
+import (
+	"QuonkScript/parser"
+)
 
 func evalBinaryExpr(expr parser.BinaryExpr, scope *Scope) RuntimeValue {
 	leftHandSide := Evaluate(expr.Left, scope)
@@ -36,4 +38,13 @@ func evalNumericBinaryExpr(left NumberValue, right NumberValue, operator string)
 func evalIdentifier(ident parser.Ident, scope *Scope) RuntimeValue {
 	val := scope.LookupVariable(ident.Symbol)
 	return val
+}
+
+func evalAssignmentExpr(expr parser.VarAssignemntExpr, scope *Scope) RuntimeValue {
+	if expr.Assignee.GetKind() != parser.IdentifierNode { // will check for objects in the future
+		panic("Honk! Attempt to assign value to something other than an identifier")
+	}
+	varname := expr.Assignee.(parser.Ident).Symbol
+	// This cast is safe as we are not implementing objects yet
+	return scope.AssignVariable(varname, Evaluate(expr.Value, scope))
 }
