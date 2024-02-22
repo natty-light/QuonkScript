@@ -107,6 +107,10 @@ func evalBooleanComparisonExpr(left BooleanValue, right BooleanValue, operator s
 		result = leftVal == rightVal
 	} else if operator == "!=" {
 		result = leftVal != rightVal
+	} else if operator == "&&" {
+		result = leftVal && rightVal
+	} else if operator == "||" {
+		result = leftVal || rightVal
 	}
 
 	return MakeBoolean(result)

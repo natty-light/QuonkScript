@@ -103,7 +103,7 @@ func (P *Parser) ParseAssignmentExpr() Expr {
 // Also kicks off ParseAdditiveExpr()
 func (P *Parser) ParseObjectExpr() Expr {
 	if P.at().Type != lexer.OpenCurlyBracket {
-		return P.ParseComparisonExpr() // If we do not find an open brace, proceed on
+		return P.ParseChainedLogicalExpr() // If we do not find an open brace, proceed on
 	}
 
 	P.eat() // advance past open brace
@@ -142,13 +142,30 @@ func (P *Parser) ParseObjectExpr() Expr {
 func (P *Parser) ParseComparisonExpr() Expr {
 	left := P.ParseAdditiveExpr()
 
-	for P.at().Type == lexer.Equality || P.at().Type == lexer.NotEqual || P.at().Type == lexer.GreaterThan || P.at().Type == lexer.LessThan || P.at().Type == lexer.GreaterEqualTo || P.at().Type == lexer.LessEqualTo {
+	if P.at().Type == lexer.Equality || P.at().Type == lexer.NotEqual || P.at().Type == lexer.GreaterThan || P.at().Type == lexer.LessThan || P.at().Type == lexer.GreaterEqualTo || P.at().Type == lexer.LessEqualTo {
 		operator := P.eat().Value
 		right := P.ParseAdditiveExpr()
 
 		left = ComparisonExpr{Kind: ComparisonExprNode, Left: left, Right: right, Operator: operator}
 	}
 
+	return left
+}
+
+func (P *Parser) ParseChainedLogicalExpr() Expr {
+	left := P.ParseComparisonExpr()
+
+	for P.at().Type == lexer.And || P.at().Type == lexer.Or {
+		operator := P.eat().Value
+		right := P.ParseComparisonExpr()
+
+		left = ComparisonExpr{
+			Kind:     ComparisonExprNode,
+			Left:     left,
+			Right:    right,
+			Operator: operator,
+		}
+	}
 	return left
 }
 
@@ -325,4 +342,21 @@ func (P *Parser) ParseVarDeclaration() Stmt {
 	declaration := VarDeclaration{Kind: VarDeclarationNode, Value: &value, Constant: isConstant, Identifier: identifier}
 	P.eatExpected(lexer.Semicolon, "Missing semicolon following variable declaration")
 	return declaration
+}
+
+// How is && going to work?
+func (P *Parser) ParseBranchStmt() Stmt {
+	P.eat() // move past if
+	P.eatExpected(lexer.OpenParen, "Honk! Expected open paren after if keyword")
+	left := P.ParseAdditiveExpr() // We want to be able to allow things like if (x + 6 > 8 * 2)
+
+	if P.at().Type == lexer.GreaterThan || P.at().Type == lexer.LessThan || P.at().Type == lexer.GreaterEqualTo || P.at().Type == lexer.LessEqualTo || P.at().Type == lexer.Equality || P.at().Type == lexer.NotEqual {
+		operator := P.eat().Value // get operator
+		right := P.ParseAdditiveExpr()
+		P.eatExpected(lexer.CloseParen, "Honk! Expected close paren following condition in if statement")
+
+		return BranchStmt{Kind: BranchNode, Condition: ComparisonExpr{Left: left, Right: right, Operator: operator}}
+	}
+
+	return left
 }
