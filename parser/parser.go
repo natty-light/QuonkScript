@@ -62,6 +62,8 @@ func (P *Parser) ParseStatement() Stmt {
 		fallthrough
 	case lexer.Const:
 		return P.ParseVarDeclaration()
+	case lexer.If:
+		return P.ParseBranchStmt()
 	default:
 		return P.ParseExpr()
 	}
@@ -344,19 +346,31 @@ func (P *Parser) ParseVarDeclaration() Stmt {
 	return declaration
 }
 
-// How is && going to work?
 func (P *Parser) ParseBranchStmt() Stmt {
 	P.eat() // move past if
-	P.eatExpected(lexer.OpenParen, "Honk! Expected open paren after if keyword")
-	left := P.ParseAdditiveExpr() // We want to be able to allow things like if (x + 6 > 8 * 2)
+	P.eatExpected(lexer.OpenParen, "Honk! Expected ( before condition in if statement")
+	condition := P.ParseChainedLogicalExpr() // We want to be able to allow things like if (x + 6 > 8 * 2)
+	P.eatExpected(lexer.CloseParen, "Honk!, Expected ) following condition in if statement")
+	P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected { following if statement")
 
-	if P.at().Type == lexer.GreaterThan || P.at().Type == lexer.LessThan || P.at().Type == lexer.GreaterEqualTo || P.at().Type == lexer.LessEqualTo || P.at().Type == lexer.Equality || P.at().Type == lexer.NotEqual {
-		operator := P.eat().Value // get operator
-		right := P.ParseAdditiveExpr()
-		P.eatExpected(lexer.CloseParen, "Honk! Expected close paren following condition in if statement")
+	body := make([]Stmt, 0)
 
-		return BranchStmt{Kind: BranchNode, Condition: ComparisonExpr{Left: left, Right: right, Operator: operator}}
+	for P.at().Type != lexer.CloseCurlyBracket {
+		body = append(body, P.ParseStatement())
+	}
+	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected } after body of if statement")
+
+	// TODO: Implement elseif?
+	elseBody := make([]Stmt, 0)
+
+	if P.at().Type == lexer.Else {
+		P.eat() // advance past else
+		P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected { after else")
+		for P.at().Type != lexer.CloseCurlyBracket {
+			elseBody = append(elseBody, P.ParseStatement())
+		}
+		P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected } after body of else")
 	}
 
-	return left
+	return BranchStmt{Condition: condition, Else: elseBody, Body: body}
 }
