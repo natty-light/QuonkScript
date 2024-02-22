@@ -25,6 +25,7 @@ const (
 	AssignmentNode
 	MemberExprNode
 	InternalFunctionCallExprNode
+	ComparisonExprNode
 )
 
 // Node Interfaces
@@ -112,6 +113,13 @@ type (
 		Args   []Expr   `json:"args"`
 		Caller Expr     `json:"caller"`
 	}
+
+	ComparisonExpr struct {
+		Kind     NodeType `json:"kind"`
+		Operator string   `json:"operator"`
+		Left     Expr
+		Right    Expr
+	}
 )
 
 // Implement Node methods
@@ -159,6 +167,10 @@ func (f InternalFunctionCallExpr) GetKind() NodeType {
 	return InternalFunctionCallExprNode
 }
 
+func (c ComparisonExpr) GetKind() NodeType {
+	return ComparisonExprNode
+}
+
 // Implement expression and statements
 func (i Ident) expressionNode() {}
 func (i Ident) statementNode()  {}
@@ -194,6 +206,9 @@ func (m MemberExpr) statementNode()  {}
 func (f InternalFunctionCallExpr) expressionNode() {}
 func (f InternalFunctionCallExpr) statementNode()  {}
 
+func (c ComparisonExpr) expressionNode() {}
+func (c ComparisonExpr) statementNode()  {}
+
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")
 	if err != nil {
@@ -204,6 +219,8 @@ func PrintAST(stmt Stmt) {
 	str = strings.ReplaceAll(str, "\"kind\": 10", "Kind: MemberExpr")
 	str = strings.ReplaceAll(str, "\"Kind\": 11", "InternalFunctionCallExpr")
 	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: InternalFunctionCallExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 12", "ComparisonExpr")
+	str = strings.ReplaceAll(str, "\"kind\": 12", "Kind: ComparisonExpr")
 	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
 	str = strings.ReplaceAll(str, "\"kind\": 1", "Kind: Program")
 	str = strings.ReplaceAll(str, "\"Kind\": 2", "VarDeclaration")
