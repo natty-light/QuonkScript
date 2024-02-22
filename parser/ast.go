@@ -26,6 +26,9 @@ const (
 	MemberExprNode
 	InternalFunctionCallExprNode
 	ComparisonExprNode
+
+	// More literals so I don't have to redo the printing
+	BooleanLiteralNode
 )
 
 // Node Interfaces
@@ -120,6 +123,11 @@ type (
 		Left     Expr
 		Right    Expr
 	}
+
+	BooleanLiteral struct {
+		ExprStmt `json:"kind"` // Type should always be NumericLiteralNode
+		Value    bool          `json:"value"`
+	}
 )
 
 // Implement Node methods
@@ -171,6 +179,10 @@ func (c ComparisonExpr) GetKind() NodeType {
 	return ComparisonExprNode
 }
 
+func (b BooleanLiteral) GetKind() NodeType {
+	return BooleanLiteralNode
+}
+
 // Implement expression and statements
 func (i Ident) expressionNode() {}
 func (i Ident) statementNode()  {}
@@ -209,6 +221,9 @@ func (f InternalFunctionCallExpr) statementNode()  {}
 func (c ComparisonExpr) expressionNode() {}
 func (c ComparisonExpr) statementNode()  {}
 
+func (b BooleanLiteral) expressionNode() {}
+func (b BooleanLiteral) statementNode()  {}
+
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")
 	if err != nil {
@@ -221,6 +236,12 @@ func PrintAST(stmt Stmt) {
 	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: InternalFunctionCallExpr")
 	str = strings.ReplaceAll(str, "\"Kind\": 12", "ComparisonExpr")
 	str = strings.ReplaceAll(str, "\"kind\": 12", "Kind: ComparisonExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 10", "MemberExpr")
+	str = strings.ReplaceAll(str, "\"kind\": 10", "Kind: MemberExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 11", "InternalFunctionCallExpr")
+	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: InternalFunctionCallExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 13", "BooleanLiteral")
+	str = strings.ReplaceAll(str, "\"kind\": 13", "Kind: BooleanLiteral")
 	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
 	str = strings.ReplaceAll(str, "\"kind\": 1", "Kind: Program")
 	str = strings.ReplaceAll(str, "\"Kind\": 2", "VarDeclaration")

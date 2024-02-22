@@ -15,9 +15,11 @@ const (
 	Number
 	Identifier
 
-	// Variables
+	// Keywords
 	Mut
 	Const
+	True
+	False
 
 	// Grouping and operations
 	Equals
@@ -93,6 +95,8 @@ func getKeywordMap() map[string]TokenType {
 		"mut":   Mut,
 		"const": Const,
 		"null":  Null,
+		"true":  True,
+		"false": False,
 	}
 }
 

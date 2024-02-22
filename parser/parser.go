@@ -243,6 +243,12 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 		return NumericLiteral{Value: val, ExprStmt: ExprStmt{Kind: NumericLiteralNode}}
 	case lexer.Identifier:
 		return Ident{Symbol: P.eat().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
+	case lexer.True:
+		P.eat()
+		return BooleanLiteral{Value: true, ExprStmt: ExprStmt{Kind: BooleanLiteralNode}}
+	case lexer.False:
+		P.eat()
+		return BooleanLiteral{Value: false, ExprStmt: ExprStmt{Kind: BooleanLiteralNode}}
 	case lexer.OpenParen:
 		P.eat() // eat the opening paren
 		val := P.ParseExpr()
