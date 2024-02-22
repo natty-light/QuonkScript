@@ -4,6 +4,7 @@ import (
 	"QuonkScript/parser"
 )
 
+// Typecasts used in ths function should be safe since we are careful about how we assign node types
 func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 	switch astNode.GetKind() {
 	case parser.NumericLiteralNode:
@@ -12,7 +13,6 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 	case parser.NullLiteralNode:
 		return MakeNull()
 	case parser.BinaryExprNode:
-		// This typecast is safe
 		return evalBinaryExpr(astNode.(parser.BinaryExpr), scope)
 	case parser.IdentifierNode:
 		return evalIdentifier(astNode.(parser.Ident), scope)
@@ -25,6 +25,8 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 		return evalAssignmentExpr(astNode.(parser.VarAssignemntExpr), scope)
 	case parser.ObjectLiteralNode:
 		return evalObjectExpr(astNode.(parser.ObjectLiteral), scope)
+	case parser.InternalFunctionCallExprNode:
+		return evalInternalFuncCallExpr(astNode.(parser.InternalFunctionCallExpr), scope)
 	default:
 		parser.PrintAST(astNode)
 		panic("This NodeType has not been implemented")

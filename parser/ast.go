@@ -24,7 +24,7 @@ const (
 	BinaryExprNode
 	AssignmentNode
 	MemberExprNode
-	FunctionCallExprNode
+	InternalFunctionCallExprNode
 )
 
 // Node Interfaces
@@ -107,7 +107,7 @@ type (
 		Computed bool     `json:"computed"`
 	}
 
-	FunctionCallExpr struct {
+	InternalFunctionCallExpr struct {
 		Kind   NodeType `json:"kind"` // Type should always be FunctionCallExprNode
 		Args   []Expr   `json:"args"`
 		Caller Expr     `json:"caller"`
@@ -155,8 +155,8 @@ func (m MemberExpr) GetKind() NodeType {
 	return MemberExprNode
 }
 
-func (f FunctionCallExpr) GetKind() NodeType {
-	return FunctionCallExprNode
+func (f InternalFunctionCallExpr) GetKind() NodeType {
+	return InternalFunctionCallExprNode
 }
 
 // Implement expression and statements
@@ -191,8 +191,8 @@ func (p PropertyLiteral) statementNode()  {}
 func (m MemberExpr) expressionNode() {}
 func (m MemberExpr) statementNode()  {}
 
-func (f FunctionCallExpr) expressionNode() {}
-func (f FunctionCallExpr) statementNode()  {}
+func (f InternalFunctionCallExpr) expressionNode() {}
+func (f InternalFunctionCallExpr) statementNode()  {}
 
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")
@@ -202,8 +202,8 @@ func PrintAST(stmt Stmt) {
 	str := string(bytes)
 	str = strings.ReplaceAll(str, "\"Kind\": 10", "MemberExpr")
 	str = strings.ReplaceAll(str, "\"kind\": 10", "Kind: MemberExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 11", "FunctionCallExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: FunctionCallExpr")
+	str = strings.ReplaceAll(str, "\"Kind\": 11", "InternalFunctionCallExpr")
+	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: InternalFunctionCallExpr")
 	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
 	str = strings.ReplaceAll(str, "\"kind\": 1", "Kind: Program")
 	str = strings.ReplaceAll(str, "\"Kind\": 2", "VarDeclaration")

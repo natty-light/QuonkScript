@@ -55,4 +55,7 @@ func (s *Scope) Resolve(varname string) *Scope {
 func SetupScope(scope *Scope) {
 	scope.DeclareVariable("true", MakeBoolean(true), true)
 	scope.DeclareVariable("false", MakeBoolean(false), true)
+
+	// define native functions
+	scope.DeclareVariable("print", MakeFunction(Print), true)
 }

@@ -66,3 +66,21 @@ func evalObjectExpr(object parser.ObjectLiteral, scope *Scope) RuntimeValue {
 	}
 	return obj
 }
+
+func evalInternalFuncCallExpr(call parser.InternalFunctionCallExpr, scope *Scope) RuntimeValue {
+	args := make([]RuntimeValue, 0)
+	for _, arg := range call.Args {
+		// Evaluate all args
+		args = append(args, Evaluate(arg, scope))
+	}
+	// Get runtime value for caller function
+	fn := Evaluate(call.Caller, scope).(InternalFunctionValue)
+
+	if fn.GetType() != InternalFunctionValueType {
+		panic("Honk! Cannot call non-function value")
+	}
+
+	// Call function
+	fn.Func(args, scope)
+	return MakeNull()
+}

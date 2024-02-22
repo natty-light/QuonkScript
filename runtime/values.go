@@ -7,6 +7,8 @@ const (
 	NumberValueType
 	BooleanValueType
 	ObjectValueType
+	InternalFunctionValueType
+	VariableValueType
 )
 
 type RuntimeValue interface {
@@ -27,6 +29,10 @@ func (n NullValue) GetType() ValueType {
 	return NullValueType
 }
 
+func (n NullValue) GetValue() *string {
+	return nil
+}
+
 func MakeNull() NullValue {
 	return NullValue{TypedValue: TypedValue{Type: NullValueType}, Value: nil}
 }
@@ -39,6 +45,10 @@ type NumberValue struct {
 
 func (n NumberValue) GetType() ValueType {
 	return NumberValueType
+}
+
+func (n NumberValue) GetValue() float64 {
+	return n.Value
 }
 
 func MakeNumber(n float64) NumberValue {
@@ -54,6 +64,10 @@ type BooleanValue struct {
 
 func (b BooleanValue) GetType() ValueType {
 	return BooleanValueType
+}
+
+func (b BooleanValue) GetValue() bool {
+	return b.Value
 }
 
 func MakeBoolean(b bool) BooleanValue {
@@ -85,6 +99,10 @@ func (v VariableValue) IsConstant() bool {
 	return v.Constant
 }
 
+func (v VariableValue) GetType() ValueType {
+	return VariableValueType
+}
+
 func MakeVariable(varname string, v *RuntimeValue, constant bool) VariableValue {
 	return VariableValue{Value: v, Constant: constant, Name: varname}
 }
@@ -92,7 +110,7 @@ func MakeVariable(varname string, v *RuntimeValue, constant bool) VariableValue 
 // Object
 
 type Object interface {
-	GetType()
+	RuntimeValue
 	Keys() []string
 	Get(name string) RuntimeValue
 	Set(name string, value RuntimeValue) RuntimeValue
@@ -124,4 +142,27 @@ func (o ObjectValue) Set(name string, value RuntimeValue) RuntimeValue {
 	o.Properties[name] = value
 
 	return value
+}
+
+// Functions (I am not going to distinguish from native and user defined functions)
+
+// This is cool
+type InternalFunctionCall func(Args []RuntimeValue, scope *Scope) RuntimeValue
+
+type InternalFunction interface {
+	RuntimeValue
+	Call(Args []RuntimeValue, scope *Scope) RuntimeValue
+}
+
+type InternalFunctionValue struct {
+	TypedValue
+	Func InternalFunctionCall
+}
+
+func (f InternalFunctionValue) GetType() ValueType {
+	return InternalFunctionValueType
+}
+
+func MakeFunction(call InternalFunctionCall) InternalFunctionValue {
+	return InternalFunctionValue{TypedValue: TypedValue{Type: InternalFunctionValueType}, Func: call}
 }

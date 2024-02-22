@@ -173,7 +173,7 @@ func (P *Parser) ParseMultiplicativeExpr() Expr {
 // This function is different as it takes in an Expr argument
 func (P *Parser) ParseFunctionCallExpr(caller Expr) Expr {
 	args := P.ParseArguments()
-	var callExpr Expr = FunctionCallExpr{Kind: FunctionCallExprNode, Caller: caller, Args: args} // no walrus here since we need callExpr to just be an Expr
+	var callExpr Expr = InternalFunctionCallExpr{Kind: InternalFunctionCallExprNode, Caller: caller, Args: args} // no walrus here since we need callExpr to just be an Expr
 
 	// This allows us to recursively chain function calls
 	if P.at().Type == lexer.OpenParen {
