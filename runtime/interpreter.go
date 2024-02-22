@@ -12,6 +12,8 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 	// Return a null by default
 	case parser.NullLiteralNode:
 		return MakeNull()
+	case parser.BooleanLiteralNode:
+		return MakeBoolean(astNode.(parser.BooleanLiteral).Value)
 	case parser.BinaryExprNode:
 		return evalBinaryExpr(astNode.(parser.BinaryExpr), scope)
 	case parser.IdentifierNode:
@@ -27,6 +29,8 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 		return evalObjectExpr(astNode.(parser.ObjectLiteral), scope)
 	case parser.InternalFunctionCallExprNode:
 		return evalInternalFuncCallExpr(astNode.(parser.InternalFunctionCallExpr), scope)
+	case parser.ComparisonExprNode:
+		return evalComparisonExpr(astNode.(parser.ComparisonExpr), scope)
 	default:
 		parser.PrintAST(astNode)
 		panic("This NodeType has not been implemented")

@@ -84,3 +84,50 @@ func evalInternalFuncCallExpr(call parser.InternalFunctionCallExpr, scope *Scope
 	fn.Func(args, scope)
 	return MakeNull()
 }
+
+func evalComparisonExpr(expr parser.ComparisonExpr, scope *Scope) RuntimeValue {
+	left := Evaluate(expr.Left, scope)
+	right := Evaluate(expr.Right, scope)
+
+	if left.GetType() == BooleanValueType && right.GetType() == BooleanValueType {
+		return evalBooleanComparisonExpr(left.(BooleanValue), right.(BooleanValue), expr.Operator)
+	} else if left.GetType() == NumberValueType && right.GetType() == NumberValueType {
+		return evalNumericComparisonExpr(left.(NumberValue), right.(NumberValue), expr.Operator)
+	} else {
+		return MakeNull()
+	}
+
+}
+
+func evalBooleanComparisonExpr(left BooleanValue, right BooleanValue, operator string) RuntimeValue {
+	result := false
+	leftVal, rightVal := left.GetValue(), right.GetValue()
+
+	if operator == "==" {
+		result = leftVal == rightVal
+	} else if operator == "!=" {
+		result = leftVal != rightVal
+	}
+
+	return MakeBoolean(result)
+}
+
+func evalNumericComparisonExpr(left NumberValue, right NumberValue, operator string) RuntimeValue {
+	result := false
+
+	if operator == "==" {
+		result = left.Value == right.Value
+	} else if operator == "!=" {
+		result = left.Value != right.Value
+	} else if operator == ">=" {
+		result = left.Value >= right.Value
+	} else if operator == "<=" {
+		result = left.Value <= right.Value
+	} else if operator == ">" {
+		result = left.Value > right.Value
+	} else if operator == "<" {
+		result = left.Value < right.Value
+	}
+
+	return MakeBoolean(result)
+}

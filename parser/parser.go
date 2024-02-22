@@ -72,6 +72,7 @@ func (P *Parser) ParseStatement() Stmt {
 //
 //		AssignmentExpr
 //		ObjectExpr
+//		ComparisonExpr
 //		AdditiveExpr
 //		MultiplicativeExpr
 //	 	FunctionCallExpr
@@ -102,7 +103,7 @@ func (P *Parser) ParseAssignmentExpr() Expr {
 // Also kicks off ParseAdditiveExpr()
 func (P *Parser) ParseObjectExpr() Expr {
 	if P.at().Type != lexer.OpenCurlyBracket {
-		return P.ParseAdditiveExpr() // If we do not find an open brace, proceed on
+		return P.ParseComparisonExpr() // If we do not find an open brace, proceed on
 	}
 
 	P.eat() // advance past open brace
@@ -138,6 +139,19 @@ func (P *Parser) ParseObjectExpr() Expr {
 	return ObjectLiteral{Kind: ObjectLiteralNode, Properties: properties}
 }
 
+func (P *Parser) ParseComparisonExpr() Expr {
+	left := P.ParseAdditiveExpr()
+
+	for P.at().Type == lexer.Equality || P.at().Type == lexer.NotEqual || P.at().Type == lexer.GreaterThan || P.at().Type == lexer.LessThan || P.at().Type == lexer.GreaterEqualTo || P.at().Type == lexer.LessEqualTo {
+		operator := P.eat().Value
+		right := P.ParseAdditiveExpr()
+
+		left = ComparisonExpr{Kind: ComparisonExprNode, Left: left, Right: right, Operator: operator}
+	}
+
+	return left
+}
+
 // Parses additive expressions with left to right precendence for order of operations.
 // Also kicks off ParseMultiplicativeExpr()
 func (P *Parser) ParseAdditiveExpr() Expr {
@@ -155,7 +169,7 @@ func (P *Parser) ParseAdditiveExpr() Expr {
 }
 
 // Parses multiplicative expressions with left to right precendence for order of operations.
-// Also kicks off ParsePrimaryExpr()
+// Function kicks off ParseCallMemberExpr
 func (P *Parser) ParseMultiplicativeExpr() Expr {
 	left := P.ParseCallMemberExpr()
 
@@ -229,6 +243,12 @@ func (P *Parser) ParsePrimaryExpr() Expr {
 		return NumericLiteral{Value: val, ExprStmt: ExprStmt{Kind: NumericLiteralNode}}
 	case lexer.Identifier:
 		return Ident{Symbol: P.eat().Value, ExprStmt: ExprStmt{Kind: IdentifierNode}}
+	case lexer.True:
+		P.eat()
+		return BooleanLiteral{Value: true, ExprStmt: ExprStmt{Kind: BooleanLiteralNode}}
+	case lexer.False:
+		P.eat()
+		return BooleanLiteral{Value: false, ExprStmt: ExprStmt{Kind: BooleanLiteralNode}}
 	case lexer.OpenParen:
 		P.eat() // eat the opening paren
 		val := P.ParseExpr()
