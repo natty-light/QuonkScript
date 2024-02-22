@@ -93,7 +93,7 @@ func (P *Parser) ParseAssignmentExpr() Expr {
 		P.eat()                          // advance past equals token
 		value := P.ParseAssignmentExpr() // we want to allow chaining so we must call recursively
 
-		return VarAssignemntExpr{Value: value, Assignee: left, Kind: AssignmentNode}
+		return VarAssignemntExpr{Value: value, Assignee: left, Kind: AssignmentExprNode}
 	}
 
 	return left

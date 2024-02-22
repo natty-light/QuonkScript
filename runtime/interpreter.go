@@ -23,7 +23,7 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 		return evalProgram(astNode.(parser.Program), scope)
 	case parser.VarDeclarationNode:
 		return evalVarDeclaration(astNode.(parser.VarDeclaration), scope)
-	case parser.AssignmentNode:
+	case parser.AssignmentExprNode:
 		return evalAssignmentExpr(astNode.(parser.VarAssignemntExpr), scope)
 	case parser.ObjectLiteralNode:
 		return evalObjectExpr(astNode.(parser.ObjectLiteral), scope)
