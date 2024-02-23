@@ -11,7 +11,7 @@ const (
 	ObjectValueType
 	InternalFunctionValueType
 	VariableValueType
-	FunctionDeclarationValueType
+	FunctionValueType
 )
 
 type RuntimeValue interface {
@@ -183,5 +183,5 @@ type FunctionValue struct {
 }
 
 func (f FunctionValue) GetType() ValueType {
-	return FunctionDeclarationValueType
+	return FunctionValueType
 }

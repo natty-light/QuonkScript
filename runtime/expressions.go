@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"QuonkScript/parser"
+	"fmt"
 )
 
 func evalBinaryExpr(expr parser.BinaryExpr, scope *Scope) RuntimeValue {
@@ -67,22 +68,48 @@ func evalObjectExpr(object parser.ObjectLiteral, scope *Scope) RuntimeValue {
 	return obj
 }
 
-func evalInternalFuncCallExpr(call parser.InternalFunctionCallExpr, scope *Scope) RuntimeValue {
+func evalCallExpr(call parser.InternalFunctionCallExpr, scope *Scope) RuntimeValue {
 	args := make([]RuntimeValue, 0)
 	for _, arg := range call.Args {
 		// Evaluate all args
 		args = append(args, Evaluate(arg, scope))
 	}
 	// Get runtime value for caller function
-	fn := Evaluate(call.Caller, scope).(InternalFunctionValue)
+	fn := Evaluate(call.Caller, scope)
 
-	if fn.GetType() != InternalFunctionValueType {
+	if fn.GetType() == InternalFunctionValueType {
+		// Call function
+		fn.(InternalFunctionValue).Func(args, scope)
+		return MakeNull()
+	} else if fn.GetType() == FunctionValueType {
+		function := fn.(FunctionValue)
+		// Inherits from function
+		functionScope := &Scope{Parent: function.DeclarationScope, Variables: map[string]Variable{}}
+
+		if len(args) != len(function.Params) {
+			panic(fmt.Sprintf("Honk! Too few arguments for call of function %s", function.Name))
+		}
+
+		// Populate scope
+		for i, param := range function.Params {
+			// we have already created the runtime value
+			functionScope.DeclareVariable(param, args[i], false)
+		}
+
+		// I am not sure about this
+		// What about early returns
+		var result RuntimeValue = MakeNull()
+
+		// Evaluate each statement -- Check for return here maybe? How to handle breaking out of all calls
+		for _, stmt := range function.Body {
+			result = Evaluate(stmt, functionScope)
+		}
+
+		return result
+	} else {
 		panic("Honk! Cannot call non-function value")
 	}
 
-	// Call function
-	fn.Func(args, scope)
-	return MakeNull()
 }
 
 func evalComparisonExpr(expr parser.ComparisonExpr, scope *Scope) RuntimeValue {
