@@ -33,6 +33,17 @@ func printRuntimeValue(val RuntimeValue) string {
 	// If the runtime val is a variable, call SprintfRuntimeValue recursively on Value field
 	case VariableValueType:
 		return printRuntimeValue(val.(VariableValue).GetValue())
+	case FunctionDeclarationValueType:
+		function := val.(FunctionValue)
+		asStr := fmt.Sprintf("[Function: %s(", function.Name)
+		for i, param := range function.Params {
+			asStr += param
+			if i != len(function.Params)-1 {
+				asStr += ", "
+			}
+		}
+		asStr += ")]"
+		return asStr
 	}
 	return ""
 }

@@ -1,5 +1,7 @@
 package runtime
 
+import "QuonkScript/parser"
+
 type ValueType int
 
 const (
@@ -9,6 +11,7 @@ const (
 	ObjectValueType
 	InternalFunctionValueType
 	VariableValueType
+	FunctionDeclarationValueType
 )
 
 type RuntimeValue interface {
@@ -165,4 +168,20 @@ func (f InternalFunctionValue) GetType() ValueType {
 
 func MakeFunction(call InternalFunctionCall) InternalFunctionValue {
 	return InternalFunctionValue{TypedValue: TypedValue{Type: InternalFunctionValueType}, Func: call}
+}
+
+type Function interface {
+	RuntimeValue
+}
+
+type FunctionValue struct {
+	TypedValue
+	Name             string
+	Params           []string
+	DeclarationScope *Scope
+	Body             []parser.Stmt
+}
+
+func (f FunctionValue) GetType() ValueType {
+	return FunctionDeclarationValueType
 }

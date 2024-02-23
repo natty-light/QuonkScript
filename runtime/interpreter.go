@@ -31,6 +31,8 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 		return evalInternalFuncCallExpr(astNode.(parser.InternalFunctionCallExpr), scope)
 	case parser.ComparisonExprNode:
 		return evalComparisonExpr(astNode.(parser.ComparisonExpr), scope)
+	case parser.FunctionDeclarationNode:
+		return evalFunctionDeclaration(astNode.(parser.FunctionDeclaration), scope)
 	default:
 		parser.PrintAST(astNode)
 		panic("This NodeType has not been implemented")
