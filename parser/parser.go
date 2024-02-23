@@ -63,7 +63,7 @@ func (P *Parser) ParseStatement() Stmt {
 	case lexer.Const:
 		return P.ParseVarDeclaration()
 	case lexer.Func:
-		return P.ParseFunctionDeclaration()
+		return P.ParseFunctionDeclaration("", false)
 	default:
 		return P.ParseExpr()
 	}
@@ -322,18 +322,32 @@ func (P *Parser) ParseVarDeclaration() Stmt {
 	}
 
 	P.eatExpected(lexer.Equals, "Expected equals following variable name in declaration")
-	value := P.ParseExpr()
+
+	var value Expr
+	if P.at().Type == lexer.Func {
+		P.eat() // advance past func
+		value = P.ParseFunctionDeclaration(identifier, true)
+	} else {
+		value = P.ParseExpr()
+	}
+
 	// is this pointer fucked?
 	declaration := VarDeclaration{Kind: VarDeclarationNode, Value: &value, Constant: isConstant, Identifier: identifier}
 	P.eatExpected(lexer.Semicolon, "Missing semicolon following variable declaration")
 	return declaration
 }
 
+// Pass in variable name, useVariableName
 // todo: check if P.at() is paren to handle anonymous function?
-func (P *Parser) ParseFunctionDeclaration() Stmt {
-	P.eat() // advance past func token
+func (P *Parser) ParseFunctionDeclaration(variableName string, useVariableName bool) Expr {
+	var name string
 
-	name := P.eatExpected(lexer.Identifier, "Honk! Expected function name in declaration").Value
+	if useVariableName {
+		name = variableName
+	} else {
+		name = P.eatExpected(lexer.Identifier, "Honk! Expected function name in declaration").Value
+	}
+
 	args := P.ParseArguments()
 
 	params := make([]string, 0)

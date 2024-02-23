@@ -131,11 +131,12 @@ type (
 	}
 
 	FunctionDeclaration struct {
-		Kind   NodeType `json:"kind"`
-		Params []string `json:"params"`
-		Name   string   `json:"name"`
-		Body   []Stmt   `json:"body"`
-		Return *Expr    `json:"return"`
+		Kind     NodeType `json:"kind"`
+		Params   []string `json:"params"`
+		Name     string   `json:"name"`
+		Body     []Stmt   `json:"body"`
+		Return   *Expr    `json:"return"`
+		Constant bool     `json:"constant"`
 	}
 )
 
@@ -237,7 +238,8 @@ func (c ComparisonExpr) statementNode()  {}
 func (b BooleanLiteral) expressionNode() {}
 func (b BooleanLiteral) statementNode()  {}
 
-func (f FunctionDeclaration) statementNode() {}
+func (f FunctionDeclaration) statementNode()  {}
+func (f FunctionDeclaration) expressionNode() {}
 
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")

@@ -13,15 +13,20 @@ func evalProgram(prog parser.Program, scope *Scope) RuntimeValue {
 }
 
 func evalVarDeclaration(declaration parser.VarDeclaration, scope *Scope) RuntimeValue {
-	var value RuntimeValue
-
+	var value RuntimeValue = MakeNull()
 	if declaration.Value == nil {
-		value = MakeNull()
+		return scope.DeclareVariable(declaration.Identifier, value, declaration.Constant)
 	} else {
-		value = Evaluate(*declaration.Value, scope)
+		exprVal := *declaration.Value
+		if exprVal.GetKind() == parser.IdentifierNode {
+			value = Evaluate(exprVal, scope)
+		} else {
+			fn := exprVal.(parser.FunctionDeclaration)
+			value = FunctionValue{Name: fn.Name, Params: fn.Params, DeclarationScope: scope, Body: fn.Body, TypedValue: TypedValue{Type: FunctionValueType}}
+		}
 	}
-
 	return scope.DeclareVariable(declaration.Identifier, value, declaration.Constant)
+
 }
 
 func evalFunctionDeclaration(declaration parser.FunctionDeclaration, scope *Scope) RuntimeValue {
