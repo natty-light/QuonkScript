@@ -62,6 +62,8 @@ func (P *Parser) ParseStatement() Stmt {
 		fallthrough
 	case lexer.Const:
 		return P.ParseVarDeclaration()
+	case lexer.Func:
+		return P.ParseFunctionDeclaration()
 	default:
 		return P.ParseExpr()
 	}
@@ -325,4 +327,32 @@ func (P *Parser) ParseVarDeclaration() Stmt {
 	declaration := VarDeclaration{Kind: VarDeclarationNode, Value: &value, Constant: isConstant, Identifier: identifier}
 	P.eatExpected(lexer.Semicolon, "Missing semicolon following variable declaration")
 	return declaration
+}
+
+// todo: check if P.at() is paren to handle anonymous function?
+func (P *Parser) ParseFunctionDeclaration() Stmt {
+	P.eat() // advance past func token
+
+	name := P.eatExpected(lexer.Identifier, "Honk! Expected function name in declaration").Value
+	args := P.ParseArguments()
+
+	params := make([]string, 0)
+	for _, arg := range args {
+		if arg.GetKind() != IdentifierNode {
+			PrintAST(arg)
+			panic("Honk! Found something other than identifier in function declaration: %s")
+		}
+
+		params = append(params, arg.(Ident).Symbol)
+	}
+
+	P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected opening { before body of function declaration")
+	body := make([]Stmt, 0)
+
+	for P.at().Type != lexer.CloseCurlyBracket && P.at().Type != lexer.EOF {
+		body = append(body, P.ParseStatement())
+	}
+	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected closing } after body of function declaration")
+
+	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode}
 }

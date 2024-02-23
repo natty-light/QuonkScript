@@ -20,6 +20,7 @@ const (
 	Const
 	True
 	False
+	Func
 
 	// Grouping and operations
 	Equals
@@ -97,6 +98,7 @@ func getKeywordMap() map[string]TokenType {
 		"null":  Null,
 		"true":  True,
 		"false": False,
+		"func":  Func,
 	}
 }
 
