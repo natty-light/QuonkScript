@@ -88,7 +88,7 @@ type (
 		Value      *Expr    `json:"value"` // Variables can be initialized without values
 	}
 
-	VarAssignemntExpr struct {
+	VarAssignmentExpr struct {
 		Kind     NodeType // Type should always be AssignmentNode but I don't know how to do that in Go
 		Assignee Expr     // This is important for the implementation of objects in supporting complex expressions
 		Value    Expr
@@ -170,7 +170,7 @@ func (v VarDeclaration) GetKind() NodeType {
 	return VarDeclarationNode
 }
 
-func (v VarAssignemntExpr) GetKind() NodeType {
+func (v VarAssignmentExpr) GetKind() NodeType {
 	return AssignmentExprNode
 }
 
@@ -226,8 +226,8 @@ func (p Program) statementNode() {}
 
 func (v VarDeclaration) statementNode() {}
 
-func (v VarAssignemntExpr) statementNode()  {}
-func (v VarAssignemntExpr) expressionNode() {}
+func (v VarAssignmentExpr) statementNode()  {}
+func (v VarAssignmentExpr) expressionNode() {}
 
 func (o ObjectLiteral) expressionNode() {}
 func (o ObjectLiteral) statementNode()  {}
