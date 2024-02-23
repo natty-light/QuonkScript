@@ -74,6 +74,7 @@ func (P *Parser) ParseStatement() Stmt {
 //
 //		AssignmentExpr
 //		ObjectExpr
+//		ChainedComparisonExpr
 //		ComparisonExpr
 //		AdditiveExpr
 //		MultiplicativeExpr
