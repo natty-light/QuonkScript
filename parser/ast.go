@@ -135,7 +135,6 @@ type (
 		Params []string `json:"params"`
 		Name   string   `json:"name"`
 		Body   []Stmt   `json:"body"`
-		Return *Expr    `json:"return"`
 	}
 
 	BranchStmt struct {

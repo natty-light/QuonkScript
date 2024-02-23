@@ -372,17 +372,10 @@ func (P *Parser) ParseFunctionDeclaration() Stmt {
 	for P.at().Type != lexer.CloseCurlyBracket && P.at().Type != lexer.EOF && P.at().Type != lexer.Return {
 		body = append(body, P.ParseStatement())
 	}
-	var ret *Expr = nil
-	if P.at().Type == lexer.Return {
-		P.eat() // advance past return
-		retExpr := P.ParseExpr()
-
-		ret = &retExpr
-	}
 
 	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected closing } after body of function declaration")
 
-	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode, Return: ret}
+	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode}
 }
 
 func (P *Parser) ParseBranchStmt() Stmt {
