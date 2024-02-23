@@ -30,6 +30,7 @@ const (
 
 	// These are here so i don't have to fix the printing
 	BooleanLiteralNode
+	FunctionDeclarationNode
 	BranchNode
 )
 
@@ -131,6 +132,14 @@ type (
 		Value    bool          `json:"value"`
 	}
 
+	FunctionDeclaration struct {
+		Kind   NodeType `json:"kind"`
+		Params []string `json:"params"`
+		Name   string   `json:"name"`
+		Body   []Stmt   `json:"body"`
+		Return *Expr    `json:"return"`
+	}
+
 	BranchStmt struct {
 		Kind      NodeType `json:"kind"`
 		Condition Expr     `json:"condition"`
@@ -192,6 +201,10 @@ func (b BooleanLiteral) GetKind() NodeType {
 	return BooleanLiteralNode
 }
 
+func (f FunctionDeclaration) GetKind() NodeType {
+	return FunctionDeclarationNode
+}
+
 func (b BranchStmt) GetKind() NodeType {
 	return BranchNode
 }
@@ -236,6 +249,8 @@ func (c ComparisonExpr) statementNode()  {}
 
 func (b BooleanLiteral) expressionNode() {}
 func (b BooleanLiteral) statementNode()  {}
+
+func (f FunctionDeclaration) statementNode() {}
 
 func (b BranchStmt) statementNode() {}
 

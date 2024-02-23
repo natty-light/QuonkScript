@@ -45,3 +45,9 @@ func evalBranchStatement(stmt parser.BranchStmt, scope *Scope) RuntimeValue {
 
 	return lastEvaluated
 }
+
+func evalFunctionDeclaration(declaration parser.FunctionDeclaration, scope *Scope) RuntimeValue {
+	function := FunctionValue{Name: declaration.Name, Params: declaration.Params, DeclarationScope: scope, Body: declaration.Body, TypedValue: TypedValue{Type: FunctionValueType}} // intializes with zero value for all fields
+
+	return scope.DeclareVariable(function.Name, function, true)
+}

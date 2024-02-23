@@ -1,0 +1,1 @@
+First class functions. If we are storing functions as variables then we should be able to reassign them so we need to track whether or not they are constant in the AST Node -- Add cases within const/mut

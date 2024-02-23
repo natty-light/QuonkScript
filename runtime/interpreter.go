@@ -28,9 +28,11 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 	case parser.ObjectLiteralNode:
 		return evalObjectExpr(astNode.(parser.ObjectLiteral), scope)
 	case parser.InternalFunctionCallExprNode:
-		return evalInternalFuncCallExpr(astNode.(parser.InternalFunctionCallExpr), scope)
+		return evalCallExpr(astNode.(parser.InternalFunctionCallExpr), scope)
 	case parser.ComparisonExprNode:
 		return evalComparisonExpr(astNode.(parser.ComparisonExpr), scope)
+	case parser.FunctionDeclarationNode:
+		return evalFunctionDeclaration(astNode.(parser.FunctionDeclaration), scope)
 	case parser.BranchNode:
 		return evalBranchStatement(astNode.(parser.BranchStmt), scope)
 	default:

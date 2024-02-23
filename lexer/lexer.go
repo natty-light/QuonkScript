@@ -23,6 +23,8 @@ const (
 	If
 	Else
 	Elseif
+	Func
+	Return
 
 	// Grouping and operations
 	Equals
@@ -107,6 +109,8 @@ func getKeywordMap() map[string]TokenType {
 		"if":     If,
 		"else":   Else,
 		"elseif": Elseif,
+		"func":   Func,
+		"return": Return,
 	}
 }
 
