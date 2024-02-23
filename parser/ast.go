@@ -254,6 +254,8 @@ func PrintAST(stmt Stmt) {
 	str = replaceStringsLowercase(ComparisonExprNode, "ComparisonExpr", str)
 	str = replaceStringsCapital(BooleanLiteralNode, "BooleanLiteral", str)
 	str = replaceStringsLowercase(BooleanLiteralNode, "BooleanLiteral", str)
+	str = replaceStringsCapital(BranchNode, "BranchStmt", str)
+	str = replaceStringsLowercase(BranchNode, "BranchStmt", str)
 	str = replaceStringsCapital(ProgramNode, "Program", str)
 	str = replaceStringsLowercase(ProgramNode, "Program", str)
 	str = replaceStringsCapital(VarDeclarationNode, "VarDeclaration", str)
