@@ -349,10 +349,18 @@ func (P *Parser) ParseFunctionDeclaration() Stmt {
 	P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected opening { before body of function declaration")
 	body := make([]Stmt, 0)
 
-	for P.at().Type != lexer.CloseCurlyBracket && P.at().Type != lexer.EOF {
+	for P.at().Type != lexer.CloseCurlyBracket && P.at().Type != lexer.EOF && P.at().Type != lexer.Return {
 		body = append(body, P.ParseStatement())
 	}
+	var ret *Expr = nil
+	if P.at().Type == lexer.Return {
+		P.eat() // advance past return
+		retExpr := P.ParseExpr()
+
+		ret = &retExpr
+	}
+
 	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected closing } after body of function declaration")
 
-	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode}
+	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode, Return: ret}
 }

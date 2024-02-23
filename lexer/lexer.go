@@ -21,6 +21,7 @@ const (
 	True
 	False
 	Func
+	Return
 
 	// Grouping and operations
 	Equals
@@ -93,12 +94,13 @@ func token(Type TokenType, Value string) Token {
 
 func getKeywordMap() map[string]TokenType {
 	return map[string]TokenType{
-		"mut":   Mut,
-		"const": Const,
-		"null":  Null,
-		"true":  True,
-		"false": False,
-		"func":  Func,
+		"mut":    Mut,
+		"const":  Const,
+		"null":   Null,
+		"true":   True,
+		"false":  False,
+		"func":   Func,
+		"return": Return,
 	}
 }
 
