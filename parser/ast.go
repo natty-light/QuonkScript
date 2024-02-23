@@ -3,6 +3,7 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -12,6 +13,8 @@ const (
 	// Statements
 	ProgramNode NodeType = iota + 1
 	VarDeclarationNode
+	FunctionDeclarationNode
+	BranchNode
 
 	// Literals
 	NumericLiteralNode
@@ -19,17 +22,14 @@ const (
 	IdentifierNode
 	PropertyLiteralNode
 	ObjectLiteralNode
+	BooleanLiteralNode
 
 	// Expressions
 	BinaryExprNode
-	AssignmentNode
+	AssignmentExprNode
 	MemberExprNode
 	InternalFunctionCallExprNode
 	ComparisonExprNode
-
-	// More literals so I don't have to redo the printing
-	BooleanLiteralNode
-	FunctionDeclarationNode
 )
 
 // Node Interfaces
@@ -88,7 +88,7 @@ type (
 		Value      *Expr    `json:"value"` // Variables can be initialized without values
 	}
 
-	VarAssignemntExpr struct {
+	VarAssignmentExpr struct {
 		Kind     NodeType // Type should always be AssignmentNode but I don't know how to do that in Go
 		Assignee Expr     // This is important for the implementation of objects in supporting complex expressions
 		Value    Expr
@@ -135,7 +135,13 @@ type (
 		Params []string `json:"params"`
 		Name   string   `json:"name"`
 		Body   []Stmt   `json:"body"`
-		Return *Expr    `json:"return"`
+	}
+
+	BranchStmt struct {
+		Kind      NodeType `json:"kind"`
+		Condition Expr     `json:"condition"`
+		Body      []Stmt   `json:"body"`
+		Else      []Stmt   `json:"else"`
 	}
 )
 
@@ -164,8 +170,8 @@ func (v VarDeclaration) GetKind() NodeType {
 	return VarDeclarationNode
 }
 
-func (v VarAssignemntExpr) GetKind() NodeType {
-	return AssignmentNode
+func (v VarAssignmentExpr) GetKind() NodeType {
+	return AssignmentExprNode
 }
 
 func (o ObjectLiteral) GetKind() NodeType {
@@ -196,6 +202,10 @@ func (f FunctionDeclaration) GetKind() NodeType {
 	return FunctionDeclarationNode
 }
 
+func (b BranchStmt) GetKind() NodeType {
+	return BranchNode
+}
+
 // Implement expression and statements
 func (i Ident) expressionNode() {}
 func (i Ident) statementNode()  {}
@@ -216,8 +226,8 @@ func (p Program) statementNode() {}
 
 func (v VarDeclaration) statementNode() {}
 
-func (v VarAssignemntExpr) statementNode()  {}
-func (v VarAssignemntExpr) expressionNode() {}
+func (v VarAssignmentExpr) statementNode()  {}
+func (v VarAssignmentExpr) expressionNode() {}
 
 func (o ObjectLiteral) expressionNode() {}
 func (o ObjectLiteral) statementNode()  {}
@@ -239,44 +249,35 @@ func (b BooleanLiteral) statementNode()  {}
 
 func (f FunctionDeclaration) statementNode() {}
 
+func (b BranchStmt) statementNode() {}
+
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")
 	if err != nil {
 		return
 	}
 	str := string(bytes)
-	str = strings.ReplaceAll(str, "\"Kind\": 10", "MemberExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 10", "Kind: MemberExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 11", "InternalFunctionCallExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: InternalFunctionCallExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 12", "ComparisonExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 12", "Kind: ComparisonExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 10", "MemberExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 10", "Kind: MemberExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 11", "InternalFunctionCallExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 11", "Kind: InternalFunctionCallExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 13", "BooleanLiteral")
-	str = strings.ReplaceAll(str, "\"kind\": 13", "Kind: BooleanLiteral")
-	str = strings.ReplaceAll(str, "\"Kind\": 14", "FunctionDeclaration")
-	str = strings.ReplaceAll(str, "\"kind\": 14", "Kind: FunctionDeclaration")
-	str = strings.ReplaceAll(str, "\"Kind\": 1", "Program")
-	str = strings.ReplaceAll(str, "\"kind\": 1", "Kind: Program")
-	str = strings.ReplaceAll(str, "\"Kind\": 2", "VarDeclaration")
-	str = strings.ReplaceAll(str, "\"kind\": 2", "Kind: VarDeclaration")
-	str = strings.ReplaceAll(str, "\"Kind\": 3", "NumericLiteral")
-	str = strings.ReplaceAll(str, "\"kind\": 3", "Kind: NumericLiteral")
-	str = strings.ReplaceAll(str, "\"Kind\": 4", "NullLiteral")
-	str = strings.ReplaceAll(str, "\"kind\": 4", "Kind: NullLiteral")
-	str = strings.ReplaceAll(str, "\"Kind\": 5", "Identifier")
-	str = strings.ReplaceAll(str, "\"kind\": 5", "Kind: Indentifier")
-	str = strings.ReplaceAll(str, "\"Kind\": 6", "PropertyLiteral")
-	str = strings.ReplaceAll(str, "\"kind\": 6", "Kind: PropertyLiteral")
-	str = strings.ReplaceAll(str, "\"Kind\": 7", "ObjectLiteral")
-	str = strings.ReplaceAll(str, "\"kind\": 7", "Kind: ObjectLiteral")
-	str = strings.ReplaceAll(str, "\"Kind\": 8", "BinaryExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 8", "Kind: BinaryExpr")
-	str = strings.ReplaceAll(str, "\"Kind\": 9", "AssignmentExpr")
-	str = strings.ReplaceAll(str, "\"kind\": 9", "Kind: AssingmentExpr")
+
+	str = replaceStrings(ComparisonExprNode, "ComparisonExpr", str)
+	str = replaceStrings(InternalFunctionCallExprNode, "InternalFunctionCallExpr", str)
+	str = replaceStrings(MemberExprNode, "MemberExpr", str)
+	str = replaceStrings(AssignmentExprNode, "AssignmentExpr", str)
+	str = replaceStrings(BinaryExprNode, "BinaryExpr", str)
+	str = replaceStrings(BooleanLiteralNode, "BooleanLiteral", str)
+	str = replaceStrings(ObjectLiteralNode, "ObjectLiteral", str)
+	str = replaceStrings(PropertyLiteralNode, "PropertyLiteral", str)
+	str = replaceStrings(IdentifierNode, "Identifier", str)
+	str = replaceStrings(NullLiteralNode, "NullLiteral", str)
+	str = replaceStrings(NumericLiteralNode, "NumericLiteral", str)
+	str = replaceStrings(BranchNode, "BranchStmt", str)
+	str = replaceStrings(FunctionDeclarationNode, "FunctionDeclaration", str)
+	str = replaceStrings(VarDeclarationNode, "VarDeclaration", str)
+	str = replaceStrings(ProgramNode, "Program", str)
 
 	fmt.Println(str)
+}
+
+func replaceStrings(node NodeType, replacer string, str string) string {
+	ret := strings.ReplaceAll(str, "\"Kind\": "+strconv.Itoa(int(node)), replacer)
+	return strings.ReplaceAll(ret, "\"kind\": "+strconv.Itoa(int(node)), "Kind: "+replacer)
 }

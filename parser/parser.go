@@ -64,6 +64,8 @@ func (P *Parser) ParseStatement() Stmt {
 		return P.ParseVarDeclaration()
 	case lexer.Func:
 		return P.ParseFunctionDeclaration()
+	case lexer.If:
+		return P.ParseBranchStmt()
 	default:
 		return P.ParseExpr()
 	}
@@ -74,6 +76,7 @@ func (P *Parser) ParseStatement() Stmt {
 //
 //		AssignmentExpr
 //		ObjectExpr
+//		ChainedComparisonExpr
 //		ComparisonExpr
 //		AdditiveExpr
 //		MultiplicativeExpr
@@ -95,7 +98,7 @@ func (P *Parser) ParseAssignmentExpr() Expr {
 		P.eat()                          // advance past equals token
 		value := P.ParseAssignmentExpr() // we want to allow chaining so we must call recursively
 
-		return VarAssignemntExpr{Value: value, Assignee: left, Kind: AssignmentNode}
+		return VarAssignmentExpr{Value: value, Assignee: left, Kind: AssignmentExprNode}
 	}
 
 	return left
@@ -105,7 +108,7 @@ func (P *Parser) ParseAssignmentExpr() Expr {
 // Also kicks off ParseAdditiveExpr()
 func (P *Parser) ParseObjectExpr() Expr {
 	if P.at().Type != lexer.OpenCurlyBracket {
-		return P.ParseComparisonExpr() // If we do not find an open brace, proceed on
+		return P.ParseChainedLogicalExpr() // If we do not find an open brace, proceed on
 	}
 
 	P.eat() // advance past open brace
@@ -144,13 +147,30 @@ func (P *Parser) ParseObjectExpr() Expr {
 func (P *Parser) ParseComparisonExpr() Expr {
 	left := P.ParseAdditiveExpr()
 
-	for P.at().Type == lexer.Equality || P.at().Type == lexer.NotEqual || P.at().Type == lexer.GreaterThan || P.at().Type == lexer.LessThan || P.at().Type == lexer.GreaterEqualTo || P.at().Type == lexer.LessEqualTo {
+	if P.at().Type == lexer.Equality || P.at().Type == lexer.NotEqual || P.at().Type == lexer.GreaterThan || P.at().Type == lexer.LessThan || P.at().Type == lexer.GreaterEqualTo || P.at().Type == lexer.LessEqualTo {
 		operator := P.eat().Value
 		right := P.ParseAdditiveExpr()
 
 		left = ComparisonExpr{Kind: ComparisonExprNode, Left: left, Right: right, Operator: operator}
 	}
 
+	return left
+}
+
+func (P *Parser) ParseChainedLogicalExpr() Expr {
+	left := P.ParseComparisonExpr()
+
+	for P.at().Type == lexer.And || P.at().Type == lexer.Or {
+		operator := P.eat().Value
+		right := P.ParseComparisonExpr()
+
+		left = ComparisonExpr{
+			Kind:     ComparisonExprNode,
+			Left:     left,
+			Right:    right,
+			Operator: operator,
+		}
+	}
 	return left
 }
 
@@ -352,15 +372,37 @@ func (P *Parser) ParseFunctionDeclaration() Stmt {
 	for P.at().Type != lexer.CloseCurlyBracket && P.at().Type != lexer.EOF && P.at().Type != lexer.Return {
 		body = append(body, P.ParseStatement())
 	}
-	var ret *Expr = nil
-	if P.at().Type == lexer.Return {
-		P.eat() // advance past return
-		retExpr := P.ParseExpr()
-
-		ret = &retExpr
-	}
 
 	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected closing } after body of function declaration")
 
-	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode, Return: ret}
+	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode}
+}
+
+func (P *Parser) ParseBranchStmt() Stmt {
+	P.eat() // move past if
+	P.eatExpected(lexer.OpenParen, "Honk! Expected opening ( before condition of if statement")
+	condition := P.ParseChainedLogicalExpr() // We want to be able to allow things like if (x + 6 > 8 * 2)
+	P.eatExpected(lexer.CloseParen, "Honk!, Expected closing ) following condition of if statement")
+	P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected opening { following if statement")
+
+	body := make([]Stmt, 0)
+
+	for P.at().Type != lexer.CloseCurlyBracket {
+		body = append(body, P.ParseStatement())
+	}
+	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected } after body of if statement")
+
+	// TODO: Implement elseif?
+	elseBody := make([]Stmt, 0)
+
+	if P.at().Type == lexer.Else {
+		P.eat() // advance past else
+		P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected { after else")
+		for P.at().Type != lexer.CloseCurlyBracket {
+			elseBody = append(elseBody, P.ParseStatement())
+		}
+		P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected } after body of else")
+	}
+
+	return BranchStmt{Condition: condition, Else: elseBody, Body: body}
 }

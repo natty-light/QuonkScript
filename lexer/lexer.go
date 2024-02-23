@@ -20,6 +20,9 @@ const (
 	Const
 	True
 	False
+	If
+	Else
+	Elseif
 	Func
 	Return
 
@@ -42,6 +45,8 @@ const (
 	GreaterEqualTo
 	LessEqualTo
 	NotEqual
+	And
+	Or
 
 	EOF // End of File
 )
@@ -69,6 +74,8 @@ const (
 	leq                = "<="
 	geq                = ">="
 	bang               = "!"
+	ampersand          = "&"
+	pipe               = "|"
 )
 
 type Token struct {
@@ -99,6 +106,9 @@ func getKeywordMap() map[string]TokenType {
 		"null":   Null,
 		"true":   True,
 		"false":  False,
+		"if":     If,
+		"else":   Else,
+		"elseif": Elseif,
 		"func":   Func,
 		"return": Return,
 	}
@@ -223,7 +233,32 @@ func Tokenize(source string) []Token {
 					remaining--
 				}
 			}
-
+		case ampersand:
+			src = utils.Pop(src)
+			remaining--
+			if remaining > 0 {
+				nextChar := src[0]
+				if nextChar == ampersand {
+					tokens = append(tokens, token(And, "&&"))
+					src = utils.Pop(src)
+					remaining--
+				} else {
+					panic(fmt.Sprintf("Honk! Unrecognized character %s", char))
+				}
+			}
+		case pipe:
+			src = utils.Pop(src)
+			remaining--
+			if remaining > 0 {
+				nextChar := src[0]
+				if nextChar == pipe {
+					tokens = append(tokens, token(And, "||"))
+					src = utils.Pop(src)
+					remaining--
+				} else {
+					panic(fmt.Sprintf("Honk! Unrecognized character %s", char))
+				}
+			}
 		case semi:
 			tokens = append(tokens, token(Semicolon, char))
 			src = utils.Pop(src)

@@ -23,8 +23,8 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 		return evalProgram(astNode.(parser.Program), scope)
 	case parser.VarDeclarationNode:
 		return evalVarDeclaration(astNode.(parser.VarDeclaration), scope)
-	case parser.AssignmentNode:
-		return evalAssignmentExpr(astNode.(parser.VarAssignemntExpr), scope)
+	case parser.AssignmentExprNode:
+		return evalAssignmentExpr(astNode.(parser.VarAssignmentExpr), scope)
 	case parser.ObjectLiteralNode:
 		return evalObjectExpr(astNode.(parser.ObjectLiteral), scope)
 	case parser.InternalFunctionCallExprNode:
@@ -33,6 +33,8 @@ func Evaluate(astNode parser.Stmt, scope *Scope) RuntimeValue {
 		return evalComparisonExpr(astNode.(parser.ComparisonExpr), scope)
 	case parser.FunctionDeclarationNode:
 		return evalFunctionDeclaration(astNode.(parser.FunctionDeclaration), scope)
+	case parser.BranchNode:
+		return evalBranchStatement(astNode.(parser.BranchStmt), scope)
 	default:
 		parser.PrintAST(astNode)
 		panic("This NodeType has not been implemented")

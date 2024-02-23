@@ -41,7 +41,7 @@ func evalIdentifier(ident parser.Ident, scope *Scope) RuntimeValue {
 	return val
 }
 
-func evalAssignmentExpr(expr parser.VarAssignemntExpr, scope *Scope) RuntimeValue {
+func evalAssignmentExpr(expr parser.VarAssignmentExpr, scope *Scope) RuntimeValue {
 	if expr.Assignee.GetKind() != parser.IdentifierNode { // will check for objects in the future
 		panic("Honk! Attempt to assign value to something other than an identifier")
 	}
@@ -134,6 +134,10 @@ func evalBooleanComparisonExpr(left BooleanValue, right BooleanValue, operator s
 		result = leftVal == rightVal
 	} else if operator == "!=" {
 		result = leftVal != rightVal
+	} else if operator == "&&" {
+		result = leftVal && rightVal
+	} else if operator == "||" {
+		result = leftVal || rightVal
 	}
 
 	return MakeBoolean(result)

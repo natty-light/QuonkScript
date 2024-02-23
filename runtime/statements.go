@@ -24,6 +24,28 @@ func evalVarDeclaration(declaration parser.VarDeclaration, scope *Scope) Runtime
 	return scope.DeclareVariable(declaration.Identifier, value, declaration.Constant)
 }
 
+func evalBranchStatement(stmt parser.BranchStmt, scope *Scope) RuntimeValue {
+	var lastEvaluated RuntimeValue = MakeNull()
+
+	childScope := &Scope{Parent: scope, Variables: map[string]Variable{}}
+
+	condition := Evaluate(stmt.Condition, scope).(BooleanValue)
+
+	if condition.Type == BooleanValueType {
+		if condition.GetValue() {
+			for _, bodyStmt := range stmt.Body {
+				lastEvaluated = Evaluate(bodyStmt, childScope)
+			}
+		} else {
+			for _, elseStmt := range stmt.Else {
+				lastEvaluated = Evaluate(elseStmt, childScope)
+			}
+		}
+	}
+
+	return lastEvaluated
+}
+
 func evalFunctionDeclaration(declaration parser.FunctionDeclaration, scope *Scope) RuntimeValue {
 	function := FunctionValue{Name: declaration.Name, Params: declaration.Params, DeclarationScope: scope, Body: declaration.Body, TypedValue: TypedValue{Type: FunctionValueType}} // intializes with zero value for all fields
 
