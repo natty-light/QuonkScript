@@ -30,6 +30,7 @@ const (
 	// More literals so I don't have to redo the printing
 	BooleanLiteralNode
 	FunctionDeclarationNode
+	ReturnStmtNode
 )
 
 // Node Interfaces
@@ -135,7 +136,12 @@ type (
 		Params []string `json:"params"`
 		Name   string   `json:"name"`
 		Body   []Stmt   `json:"body"`
-		Return *Expr    `json:"return"`
+		// Return *Expr    `json:"return"`
+	}
+
+	ReturnStmt struct {
+		Kind  NodeType `json:"kind"`
+		Value Expr     `json:"value"`
 	}
 )
 
@@ -196,6 +202,10 @@ func (f FunctionDeclaration) GetKind() NodeType {
 	return FunctionDeclarationNode
 }
 
+func (r ReturnStmt) GetKind() NodeType {
+	return ReturnStmtNode
+}
+
 // Implement expression and statements
 func (i Ident) expressionNode() {}
 func (i Ident) statementNode()  {}
@@ -238,6 +248,8 @@ func (b BooleanLiteral) expressionNode() {}
 func (b BooleanLiteral) statementNode()  {}
 
 func (f FunctionDeclaration) statementNode() {}
+
+func (f ReturnStmt) statementNode() {}
 
 func PrintAST(stmt Stmt) {
 	bytes, err := json.MarshalIndent(stmt, "", "    ")

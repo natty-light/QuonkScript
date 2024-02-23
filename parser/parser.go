@@ -64,6 +64,8 @@ func (P *Parser) ParseStatement() Stmt {
 		return P.ParseVarDeclaration()
 	case lexer.Func:
 		return P.ParseFunctionDeclaration()
+	case lexer.Return:
+		return P.ParseReturnStmt()
 	default:
 		return P.ParseExpr()
 	}
@@ -349,18 +351,29 @@ func (P *Parser) ParseFunctionDeclaration() Stmt {
 	P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected opening { before body of function declaration")
 	body := make([]Stmt, 0)
 
-	for P.at().Type != lexer.CloseCurlyBracket && P.at().Type != lexer.EOF && P.at().Type != lexer.Return {
+	for P.at().Type != lexer.CloseCurlyBracket && P.at().Type != lexer.EOF {
 		body = append(body, P.ParseStatement())
 	}
-	var ret *Expr = nil
-	if P.at().Type == lexer.Return {
-		P.eat() // advance past return
-		retExpr := P.ParseExpr()
 
-		ret = &retExpr
+	// Ensure function body ends with return
+	if len(body) == 0 {
+		// If there is no function body, append a return of nil
+		body = append(body, ReturnStmt{Kind: ReturnStmtNode, Value: nil})
+	} else if body[len(body)-1].GetKind() != ReturnStmtNode {
+		// Save last body stmt
+		last := body[len(body)-1]
+		// remove last element
+		body = body[:len(body)-1]
+		body = append(body, ReturnStmt{Kind: ReturnStmtNode, Value: last.(Expr)})
 	}
 
 	P.eatExpected(lexer.CloseCurlyBracket, "Honk! Expected closing } after body of function declaration")
 
-	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode, Return: ret}
+	return FunctionDeclaration{Name: name, Body: body, Params: params, Kind: FunctionDeclarationNode}
+}
+
+func (P *Parser) ParseReturnStmt() Stmt {
+	P.eat() // advance past return
+	value := P.ParseExpr()
+	return ReturnStmt{Kind: ReturnStmtNode, Value: value}
 }
