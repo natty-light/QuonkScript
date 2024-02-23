@@ -63,7 +63,7 @@ func run(filename string) {
 	runtime.SetupScope(scope)
 
 	prog := p.ProduceAST(src)
-	parser.PrintAST(prog)
+	// parser.PrintAST(prog)
 	result := runtime.Evaluate(prog, scope)
 
 	fmt.Println(result)
