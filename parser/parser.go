@@ -349,10 +349,10 @@ func (P *Parser) ParseVarDeclaration() Stmt {
 
 func (P *Parser) ParseBranchStmt() Stmt {
 	P.eat() // move past if
-	P.eatExpected(lexer.OpenParen, "Honk! Expected ( before condition in if statement")
+	P.eatExpected(lexer.OpenParen, "Honk! Expected opening ( before condition of if statement")
 	condition := P.ParseChainedLogicalExpr() // We want to be able to allow things like if (x + 6 > 8 * 2)
-	P.eatExpected(lexer.CloseParen, "Honk!, Expected ) following condition in if statement")
-	P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected { following if statement")
+	P.eatExpected(lexer.CloseParen, "Honk!, Expected closing ) following condition of if statement")
+	P.eatExpected(lexer.OpenCurlyBracket, "Honk! Expected opening { following if statement")
 
 	body := make([]Stmt, 0)
 
