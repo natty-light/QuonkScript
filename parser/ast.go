@@ -13,6 +13,8 @@ const (
 	// Statements
 	ProgramNode NodeType = iota + 1
 	VarDeclarationNode
+	FunctionDeclarationNode
+	BranchNode
 
 	// Literals
 	NumericLiteralNode
@@ -20,6 +22,7 @@ const (
 	IdentifierNode
 	PropertyLiteralNode
 	ObjectLiteralNode
+	BooleanLiteralNode
 
 	// Expressions
 	BinaryExprNode
@@ -27,11 +30,6 @@ const (
 	MemberExprNode
 	InternalFunctionCallExprNode
 	ComparisonExprNode
-
-	// These are here so i don't have to fix the printing
-	BooleanLiteralNode
-	FunctionDeclarationNode
-	BranchNode
 )
 
 // Node Interfaces
@@ -261,42 +259,26 @@ func PrintAST(stmt Stmt) {
 	}
 	str := string(bytes)
 
-	str = replaceStringsCapital(MemberExprNode, "MemberExpr", str)
-	str = replaceStringsLowercase(MemberExprNode, "MemberExpr", str)
-	str = replaceStringsCapital(InternalFunctionCallExprNode, "InternalFunctionCallExpr", str)
-	str = replaceStringsLowercase(InternalFunctionCallExprNode, "InternalFunctionCallExpr", str)
-	str = replaceStringsCapital(ComparisonExprNode, "ComparisonExpr", str)
-	str = replaceStringsLowercase(ComparisonExprNode, "ComparisonExpr", str)
-	str = replaceStringsCapital(BooleanLiteralNode, "BooleanLiteral", str)
-	str = replaceStringsLowercase(BooleanLiteralNode, "BooleanLiteral", str)
-	str = replaceStringsCapital(BranchNode, "BranchStmt", str)
-	str = replaceStringsLowercase(BranchNode, "BranchStmt", str)
-	str = replaceStringsCapital(ProgramNode, "Program", str)
-	str = replaceStringsLowercase(ProgramNode, "Program", str)
-	str = replaceStringsCapital(VarDeclarationNode, "VarDeclaration", str)
-	str = replaceStringsLowercase(VarDeclarationNode, "VarDeclaration", str)
-	str = replaceStringsCapital(NumericLiteralNode, "NumericLiteral", str)
-	str = replaceStringsLowercase(NumericLiteralNode, "NumericLiteral", str)
-	str = replaceStringsCapital(NullLiteralNode, "NullLiteral", str)
-	str = replaceStringsLowercase(NullLiteralNode, "NullLiteral", str)
-	str = replaceStringsCapital(IdentifierNode, "Identifier", str)
-	str = replaceStringsLowercase(IdentifierNode, "Identifier", str)
-	str = replaceStringsCapital(PropertyLiteralNode, "PropertyLiteral", str)
-	str = replaceStringsLowercase(PropertyLiteralNode, "PropertyLiteral", str)
-	str = replaceStringsCapital(ObjectLiteralNode, "ObjectLiteral", str)
-	str = replaceStringsLowercase(ObjectLiteralNode, "ObjectLiteral", str)
-	str = replaceStringsCapital(BinaryExprNode, "BinaryExpr", str)
-	str = replaceStringsLowercase(BinaryExprNode, "BinaryExpr", str)
-	str = replaceStringsCapital(AssignmentExprNode, "AssignmentExpr", str)
-	str = replaceStringsLowercase(AssignmentExprNode, "AssignmentExpr", str)
+	str = replaceStrings(ComparisonExprNode, "ComparisonExpr", str)
+	str = replaceStrings(InternalFunctionCallExprNode, "InternalFunctionCallExpr", str)
+	str = replaceStrings(MemberExprNode, "MemberExpr", str)
+	str = replaceStrings(AssignmentExprNode, "AssignmentExpr", str)
+	str = replaceStrings(BinaryExprNode, "BinaryExpr", str)
+	str = replaceStrings(BooleanLiteralNode, "BooleanLiteral", str)
+	str = replaceStrings(ObjectLiteralNode, "ObjectLiteral", str)
+	str = replaceStrings(PropertyLiteralNode, "PropertyLiteral", str)
+	str = replaceStrings(IdentifierNode, "Identifier", str)
+	str = replaceStrings(NullLiteralNode, "NullLiteral", str)
+	str = replaceStrings(NumericLiteralNode, "NumericLiteral", str)
+	str = replaceStrings(BranchNode, "BranchStmt", str)
+	str = replaceStrings(FunctionDeclarationNode, "FunctionDeclaration", str)
+	str = replaceStrings(VarDeclarationNode, "VarDeclaration", str)
+	str = replaceStrings(ProgramNode, "Program", str)
 
 	fmt.Println(str)
 }
 
-func replaceStringsCapital(node NodeType, replacer string, str string) string {
-	return strings.ReplaceAll(str, "\"Kind\": "+strconv.Itoa(int(node)), replacer)
-}
-
-func replaceStringsLowercase(node NodeType, replacer string, str string) string {
-	return strings.ReplaceAll(str, "\"kind\": "+strconv.Itoa(int(node)), "Kind: "+replacer)
+func replaceStrings(node NodeType, replacer string, str string) string {
+	ret := strings.ReplaceAll(str, "\"Kind\": "+strconv.Itoa(int(node)), replacer)
+	return strings.ReplaceAll(ret, "\"kind\": "+strconv.Itoa(int(node)), "Kind: "+replacer)
 }
